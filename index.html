@@ -882,6 +882,9 @@ html, body {
   }
 }
 
+
+.sync-status{font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:rgba(243,234,211,.35);margin-left:auto}
+@media(max-width:780px){.sync-status{display:block;margin:4px 0 0}}
 </style>
 </head>
 <body>
@@ -939,6 +942,7 @@ html, body {
       </div>
       <section id="adminPanel">
         <div class="admin-head">
+        <span id="ruleSyncStatus" class="sync-status">Đồng bộ Google Sheet</span>
           <div>
             <h3 class="admin-title">⚙ Quản trị Rule</h3>
             <p class="admin-sub">Thêm, sửa hoặc xoá Rule. Tên Rule sẽ là nút bấm và dẫn tới link bạn nhập.</p>
@@ -995,7 +999,7 @@ const ACCESS_CODES = [
 ];
 
 const ADMIN_ACCOUNT = {
-  username: "chong",
+  username: "admin",
   password: "P@ssw0rd",
   name: "Quản trị viên"
 };
@@ -1109,13 +1113,52 @@ function apiGetRules(){
 }
 
 function apiPostRule(payload){
-  return fetch(ACCESS_LOG_API_URL, {
-    method:"POST",
-    mode:"no-cors",
-    headers:{"Content-Type":"text/plain;charset=UTF-8"},
-    body:JSON.stringify(payload),
-    keepalive:true
-  }).catch(() => {});
+  /*
+    Ghi Rule bằng GET + JSONP để không bị CORS/redirect chặn trên điện thoại.
+    Apps Script doGet() sẽ lưu Rule vào sheet Rules.
+  */
+  return new Promise((resolve) => {
+    const callbackName = "__ruleWrite_" + Date.now() + "_" +
+      Math.random().toString(36).slice(2);
+
+    const script = document.createElement("script");
+    let finished = false;
+
+    const cleanup = () => {
+      clearTimeout(timer);
+      try { delete window[callbackName]; } catch(e) {}
+      if (script.parentNode) script.parentNode.removeChild(script);
+    };
+
+    const done = (ok) => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      resolve(ok);
+    };
+
+    const timer = setTimeout(() => done(false), 15000);
+
+    window[callbackName] = (data) => {
+      done(!!(data && data.success));
+    };
+
+    script.onerror = () => done(false);
+
+    const params = new URLSearchParams();
+    params.set("action", payload.action || "");
+    params.set("callback", callbackName);
+
+    Object.keys(payload).forEach(key => {
+      if (key === "action") return;
+      if (payload[key] !== undefined && payload[key] !== null) {
+        params.set(key, String(payload[key]));
+      }
+    });
+
+    script.src = ACCESS_LOG_API_URL + "?" + params.toString();
+    document.head.appendChild(script);
+  });
 }
 
 async function syncRulesFromServer(){
@@ -1134,9 +1177,16 @@ async function syncRulesFromServer(){
       Nếu server thật sự có Rule thì dùng danh sách server.
       Nếu server tạm thời trả rỗng, không xóa Rule đang có ở Admin.
     */
-    if (normalizedServerRules.length || !adminRules.length){
+    if (normalizedServerRules.length){
       adminRules = normalizedServerRules;
       saveAdminRules();
+    } else {
+      /* Server chưa có Rule: giữ Rule hiện có trên máy và để Admin đẩy lên. */
+      renderAdminRules();
+      renderRuleLinks();
+      if (isAdmin(currentUser) && adminRules.length){
+        syncLocalRulesToServer();
+      }
     }
 
     renderAdminRules();
@@ -1154,7 +1204,7 @@ async function syncRulesFromServer(){
 }
 
 function syncLocalRulesToServer(){
-  if(!isAdmin(currentUser) || !adminRules.length) return;
+  if(!isAdmin(currentUser) || !adminRules.length) return Promise.resolve([]);
 
   adminRules = adminRules.map(rule => {
     const category = PARENT_CATEGORIES.find(c => c.id === (rule.categoryId || "phone")) || PARENT_CATEGORIES[0];
@@ -1169,21 +1219,33 @@ function syncLocalRulesToServer(){
 
   saveAdminRules();
 
-  adminRules.forEach(rule => {
-    apiPostRule({
-      action:"saveRule",
-      id:rule.id,
-      name:rule.name,
-      url:rule.url,
-      categoryId:rule.categoryId,
-      categoryName:rule.categoryName
-    });
+  const status = document.getElementById("ruleSyncStatus");
+  if (status) status.textContent = "Đang đồng bộ Rule...";
+
+  const jobs = adminRules.map(rule => apiPostRule({
+    action:"saveRule",
+    id:rule.id,
+    name:rule.name,
+    url:rule.url,
+    categoryId:rule.categoryId,
+    categoryName:rule.categoryName
+  }));
+
+  return Promise.all(jobs).then(results => {
+    const ok = results.filter(Boolean).length;
+    if (status){
+      status.textContent = ok === adminRules.length
+        ? "Đã đồng bộ " + ok + " Rule"
+        : "Đã gửi " + ok + "/" + adminRules.length + " Rule";
+    }
+    return results;
   });
 }
 
 function saveRuleToServer(rule){
   const category = PARENT_CATEGORIES.find(c => c.id === (rule.categoryId || "phone")) || PARENT_CATEGORIES[0];
-  return apiPostRule({
+
+  const promise = apiPostRule({
     action:"saveRule",
     id:rule.id || makeRuleId(rule.name, rule.url),
     name:rule.name,
@@ -1191,6 +1253,15 @@ function saveRuleToServer(rule){
     categoryId:category.id,
     categoryName:category.name
   });
+
+  promise.then(ok => {
+    const el = document.getElementById("ruleSyncStatus");
+    if (el){
+      el.textContent = ok ? "Đã gửi Rule lên Google Sheet" : "Chưa gửi được Rule";
+    }
+  });
+
+  return promise;
 }
 
 function deleteRuleFromServer(rule){
@@ -1543,7 +1614,11 @@ function openAdminPanel(){
   document.getElementById("adminPanel").style.display = "block";
   document.getElementById("adminToggleBtn").style.display = "inline-block";
   renderAdminRules();
-  syncRulesFromServer();
+  if (isAdmin(currentUser)){
+    syncLocalRulesToServer().then(() => setTimeout(syncRulesFromServer, 1200));
+  }else{
+    syncRulesFromServer();
+  }
 }
 
 function closeAdminPanel(){
@@ -1593,8 +1668,9 @@ function showMain(user){
   /* Admin đồng bộ Rule đang có trên máy lên server trước.
      Sau đó tất cả thiết bị tải danh sách Rule chung. */
   if (isAdmin(user)){
-    syncLocalRulesToServer();
-    setTimeout(syncRulesFromServer, 800);
+    syncLocalRulesToServer().then(() => {
+      setTimeout(syncRulesFromServer, 1200);
+    });
   }else{
     syncRulesFromServer();
   }
