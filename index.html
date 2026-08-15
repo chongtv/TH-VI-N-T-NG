@@ -131,7 +131,13 @@ body::before{
   outline:none;
   transition: border-color .15s ease;
 }
-#codeInput:focus{ border-color: var(--accent); }
+#codeInput:focus,#provinceInput:focus,#passwordInput:focus{ border-color: var(--accent); }
+#provinceInput,#passwordInput{
+  width:100%; font-family:var(--mono); font-size:15px;
+  padding:13px 14px; border:1.5px solid var(--card-edge);
+  border-bottom:2.5px solid var(--ink); border-radius:2px;
+  background:#fffdf7; color:var(--ink); outline:none;
+}
 #loginForm{ display:flex; flex-direction:column; gap:18px; }
 #loginBtn{
   background: var(--ink);
@@ -380,75 +386,6 @@ body::before{
 .admin-badge{font-family:var(--mono);font-size:9px;color:var(--accent);border:1px solid rgba(201,138,44,.45);padding:2px 5px;border-radius:2px;margin-left:auto}
 @media(max-width:700px){.admin-form,.admin-rule{grid-template-columns:1fr}.admin-actions{justify-content:flex-start}}
 
-
-/* ===================== TAB TÌM KIẾM RULE ===================== */
-.rule-search-panel{
-  max-width:680px;
-}
-.rule-search-title{
-  font-family:var(--serif);
-  font-size:28px;
-  font-weight:700;
-  margin:4px 0 8px;
-}
-.rule-search-desc{
-  color:rgba(243,234,211,.6);
-  font-size:14px;
-  line-height:1.6;
-  margin-bottom:18px;
-}
-#ruleSearchInput{
-  width:100%;
-  max-width:520px;
-  background:rgba(243,234,211,.06);
-  border:1px solid rgba(243,234,211,.18);
-  color:var(--card);
-  padding:12px 14px;
-  border-radius:3px;
-  font-size:14px;
-  outline:none;
-}
-#ruleSearchInput:focus{border-color:var(--accent)}
-#ruleSearchInput::placeholder{color:rgba(243,234,211,.35)}
-.rule-suggestions{
-  margin-top:12px;
-  max-width:520px;
-  display:flex;
-  flex-direction:column;
-  gap:7px;
-}
-.rule-suggestion{
-  width:100%;
-  display:flex;
-  align-items:center;
-  gap:10px;
-  text-align:left;
-  background:rgba(243,234,211,.06);
-  color:var(--card);
-  border:1px solid rgba(243,234,211,.12);
-  padding:11px 12px;
-  border-radius:3px;
-  cursor:pointer;
-}
-.rule-suggestion:hover{
-  border-color:var(--accent);
-  background:rgba(201,138,44,.12);
-}
-.rule-suggestion .suggest-icon{font-size:14px}
-.rule-suggestion .suggest-name{font-weight:600}
-.rule-suggestion .suggest-open{
-  margin-left:auto;
-  font-family:var(--mono);
-  font-size:10px;
-  color:var(--accent);
-}
-.rule-search-empty{
-  color:rgba(243,234,211,.4);
-  font-size:13px;
-  font-family:var(--mono);
-  padding:10px 2px;
-}
-
 </style>
 </head>
 <body>
@@ -461,12 +398,16 @@ body::before{
     <p class="catalog-sub">Nhập mã truy cập của bạn để mở tủ tài liệu học tập.</p>
     <form id="loginForm">
       <div>
-        <label class="field-label" for="codeInput">Tài khoản / Mã truy cập</label>
-        <input id="codeInput" type="text" autocomplete="username" placeholder="VD: SV001 hoặc admin" />
+        <label class="field-label" for="codeInput">Nhập họ và tên</label>
+        <input id="codeInput" type="text" autocomplete="name" placeholder="Nhập họ và tên của bạn" />
+      </div>
+      <div id="provinceWrap">
+        <label class="field-label" for="provinceInput">Tỉnh / Thành phố</label>
+        <input id="provinceInput" type="text" autocomplete="address-level1" placeholder="Nhập tỉnh / thành phố" />
       </div>
       <div id="passwordWrap">
-        <label class="field-label" for="passwordInput">Mật khẩu</label>
-        <input id="passwordInput" type="password" autocomplete="current-password" placeholder="Mật khẩu (chỉ cần với admin)" />
+        <label class="field-label" for="passwordInput">Mật khẩu Admin</label>
+        <input id="passwordInput" type="password" autocomplete="current-password" placeholder="Chỉ nhập khi đăng nhập Admin" />
       </div>
       <button id="loginBtn" type="submit">Mở tủ tài liệu</button>
       <div id="loginError"></div>
@@ -495,15 +436,7 @@ body::before{
     </nav>
 
     <main class="content">
-      <div class="content-header rule-search-panel">
-        <div class="content-eyebrow">Tìm kiếm</div>
-        <h2 class="rule-search-title">Tìm kiếm Rule</h2>
-        <p class="rule-search-desc">Nhập từ khóa để tìm nhanh các Rule đã được quản trị viên thêm vào.</p>
-        <input id="ruleSearchInput" type="text" autocomplete="off" placeholder="Nhập từ khóa Rule…" />
-        <div id="ruleSuggestions" class="rule-suggestions"></div>
-      </div>
-
-      <div id="legacyCategoryContent" style="display:none">
+      <div class="content-header">
         <div class="content-eyebrow" id="catEyebrow">Danh mục</div>
         <h2 class="content-title" id="catTitle">—</h2>
         <p class="content-desc" id="catDesc"></p>
@@ -523,13 +456,13 @@ body::before{
         </form>
         <div id="adminRuleList" class="admin-list"></div>
       </section>
-      <div class="search-row" style="display:none">
+      <div class="search-row">
         <input id="searchInput" type="text" placeholder="Tìm tài liệu trong danh mục này…" />
       </div>
-      <div class="card-grid" id="itemGrid" style="display:none"></div>
+      <div class="card-grid" id="itemGrid"></div>
     </main>
   </div>
-  <div class="footnote">Nhập từ khóa ở ô Tìm kiếm để tìm nhanh Rule trong danh mục.</div>
+  <div class="footnote">Quản trị viên có thể thêm/sửa/xoá Rule. Mục Dữ liệu truy cập chỉ hiển thị với tài khoản Admin.</div>
 </div>
 
 
@@ -573,6 +506,11 @@ const CATEGORIES = [];
    ⬇️ TỪ ĐÂY TRỞ XUỐNG LÀ LOGIC HOẠT ĐỘNG — KHÔNG CẦN CHỈNH
    ====================================================================== */
 
+
+const ACCESS_DATA_SHEET_RULE = {
+  name: "Dữ liệu truy cập",
+  url: "https://docs.google.com/spreadsheets/d/1LUTParmZ-MqQlV--W-1JEOgAFS9aqgZazqfy3rxNAjg/edit?gid=0#gid=0"
+};
 
 const RULES_STORAGE_KEY = "library_admin_rules_v1";
 let editingRuleIndex = -1;
@@ -644,8 +582,9 @@ function renderRuleLinks(){
   const list = document.getElementById("tabList");
   if (!list) return;
 
-  list.querySelectorAll(".dynamic-rule").forEach(el => el.remove());
+  list.querySelectorAll(".dynamic-rule, .admin-only-rule").forEach(el => el.remove());
 
+  /* Rule do Admin tạo: mọi user đều có thể thấy. */
   adminRules.forEach(rule => {
     const btn = document.createElement("button");
     btn.type = "button";
@@ -670,60 +609,36 @@ function renderRuleLinks(){
     btn.addEventListener("click", () => window.open(rule.url, "_blank", "noopener,noreferrer"));
     list.appendChild(btn);
   });
-}
 
-
-function renderRuleSuggestions(query){
-  const box = document.getElementById("ruleSuggestions");
-  if (!box) return;
-
-  const q = (query || "").trim().toLowerCase();
-  box.innerHTML = "";
-
-  /* Chưa nhập gì thì không xổ toàn bộ Rule, chỉ hiện hướng dẫn */
-  if (!q){
-    box.innerHTML = '<div class="rule-search-empty">Nhập từ khóa để bắt đầu tìm kiếm.</div>';
-    return;
-  }
-
-  const matches = adminRules.filter(rule =>
-    (rule.name || "").toLowerCase().includes(q)
-  );
-
-  if (!matches.length){
-    box.innerHTML = '<div class="rule-search-empty">Không tìm thấy Rule phù hợp.</div>';
-    return;
-  }
-
-  matches.forEach(rule => {
+  /* Chỉ Admin mới được thấy Rule mở Google Sheet dữ liệu truy cập. */
+  if (isAdmin(currentUser)){
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "rule-suggestion";
+    btn.className = "rule-link admin-only-rule";
+    btn.title = ACCESS_DATA_SHEET_RULE.url;
 
-    const icon = document.createElement("span");
-    icon.className = "suggest-icon";
-    icon.textContent = "🔗";
+    const ic = document.createElement("span");
+    ic.className = "ic";
+    ic.textContent = "📊";
 
-    const name = document.createElement("span");
-    name.className = "suggest-name";
-    name.textContent = rule.name;
+    const text = document.createElement("span");
+    text.textContent = ACCESS_DATA_SHEET_RULE.name;
 
-    const open = document.createElement("span");
-    open.className = "suggest-open";
-    open.textContent = "MỞ →";
+    const badge = document.createElement("span");
+    badge.className = "admin-badge";
+    badge.textContent = "ADMIN";
 
-    btn.appendChild(icon);
-    btn.appendChild(name);
-    btn.appendChild(open);
+    btn.appendChild(ic);
+    btn.appendChild(text);
+    btn.appendChild(badge);
 
     btn.addEventListener("click", () => {
-      window.open(rule.url, "_blank", "noopener,noreferrer");
+      window.open(ACCESS_DATA_SHEET_RULE.url, "_blank", "noopener,noreferrer");
     });
 
-    box.appendChild(btn);
-  });
+    list.appendChild(btn);
+  }
 }
-
 function startEditRule(index){
   const rule = adminRules[index];
   if (!rule) return;
@@ -741,8 +656,6 @@ function deleteRule(index){
   saveAdminRules();
   renderAdminRules();
   renderRuleLinks();
-  const search = document.getElementById("ruleSearchInput");
-  if (search) renderRuleSuggestions(search.value);
 }
 
 function openAdminPanel(){
@@ -786,13 +699,14 @@ function showMain(user){
 
   renderTabs();
   renderRuleLinks();
-  renderRuleSuggestions(document.getElementById("ruleSearchInput").value);
+  renderCategory(activeCategoryId);
 }
 
 function showLogin(){
   document.getElementById("mainScreen").style.display = "none";
   document.getElementById("loginScreen").style.display = "flex";
   document.getElementById("codeInput").value = "";
+  document.getElementById("provinceInput").value = "";
   document.getElementById("passwordInput").value = "";
   closeAdminPanel();
   document.getElementById("adminToggleBtn").style.display = "none";
@@ -805,18 +719,21 @@ document.getElementById("loginForm").addEventListener("submit", function(e){
 
   try{
     const input = document.getElementById("codeInput");
+    const provinceInput = document.getElementById("provinceInput");
     const passwordInput = document.getElementById("passwordInput");
     const errorBox = document.getElementById("loginError");
 
-    const username = normalize(input.value);
+    const name = input.value.trim();
+    const province = provinceInput.value.trim();
     const password = passwordInput.value;
 
-    /* Đăng nhập Admin */
-    if (username === normalize(ADMIN_ACCOUNT.username)){
+    /* Admin vẫn dùng tài khoản + mật khẩu cố định. */
+    if (normalize(name) === normalize(ADMIN_ACCOUNT.username)){
       if (password === ADMIN_ACCOUNT.password){
         const adminUser = {
           code: ADMIN_ACCOUNT.username,
           name: ADMIN_ACCOUNT.name,
+          province: "Quản trị",
           role: "admin"
         };
 
@@ -840,20 +757,25 @@ document.getElementById("loginForm").addEventListener("submit", function(e){
       return;
     }
 
-    /* Người dùng thường vẫn đăng nhập bằng mã truy cập như trước */
-    const user = findUser(input.value);
+    /* User thường: chỉ cần nhập đủ Họ tên + Tỉnh/Thành phố là được vào. */
+    if (name && province){
+      const user = {
+        code: "USER-" + Date.now(),
+        name: name,
+        province: province,
+        role: "user"
+      };
 
-    if (user){
       errorBox.textContent = "";
-      currentUser = Object.assign({}, user, {role:"user"});
+      currentUser = user;
 
       try{
-        sessionStorage.setItem("lib_access_session", JSON.stringify(currentUser));
+        sessionStorage.setItem("lib_access_session", JSON.stringify(user));
       }catch(storageErr){}
 
       showMain(currentUser);
     }else{
-      errorBox.textContent = "Tài khoản / mã truy cập không đúng. Vui lòng kiểm tra lại.";
+      errorBox.textContent = "Vui lòng nhập đầy đủ họ và tên và tỉnh / thành phố.";
       const card = document.querySelector(".catalog-card");
       card.classList.remove("shake");
       void card.offsetWidth;
@@ -873,6 +795,7 @@ document.getElementById("logoutBtn").addEventListener("click", function(){
 
 /* ---- chức năng quản trị Rule ---- */
 document.getElementById("adminToggleBtn").addEventListener("click", function(){
+  if (!isAdmin(currentUser)) return;
   if (document.getElementById("adminPanel").style.display === "block"){
     closeAdminPanel();
   }else{
@@ -908,9 +831,6 @@ document.getElementById("adminRuleForm").addEventListener("submit", function(e){
   saveAdminRules();
   renderAdminRules();
   renderRuleLinks();
-
-  const ruleSearch = document.getElementById("ruleSearchInput");
-  if (ruleSearch) renderRuleSuggestions(ruleSearch.value);
 
   nameInput.value = "";
   urlInput.value = "";
@@ -983,14 +903,6 @@ function renderItems(items){
   });
 }
 
-/* ---- tìm kiếm các Rule do Admin thêm ---- */
-document.getElementById("ruleSearchInput").addEventListener("input", function(e){
-  renderRuleSuggestions(e.target.value);
-});
-
-/* Khởi tạo trạng thái ô tìm kiếm */
-renderRuleSuggestions("");
-
 /* ---- tìm kiếm trong danh mục hiện tại ---- */
 document.getElementById("searchInput").addEventListener("input", function(e){
   const q = e.target.value.trim().toLowerCase();
@@ -1017,10 +929,16 @@ function escapeHtml(str){
     const raw = sessionStorage.getItem("lib_access_session");
     if (raw){
       const user = JSON.parse(raw);
-      if ((user.role === "admin" && user.code === ADMIN_ACCOUNT.username) || findUser(user.code)){
+      if (user && user.role === "admin" && user.code === ADMIN_ACCOUNT.username){
         currentUser = user;
         showMain(user);
-        if (isAdmin(user)) openAdminPanel();
+        openAdminPanel();
+        return;
+      }
+
+      if (user && user.role === "user" && user.name && user.province){
+        currentUser = user;
+        showMain(user);
         return;
       }
     }
