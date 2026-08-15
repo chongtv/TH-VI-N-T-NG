@@ -1138,7 +1138,25 @@ const ACCESS_DATA_SHEET_RULE = {
 const RULES_STORAGE_KEY = "library_admin_rules_v1";
 let editingRuleIndex = -1;
 let adminRules = loadAdminRules();
-let deployNotes = [];
+const DEPLOY_CACHE_KEY = "library_deploy_notes_v1";
+let deployNotes = loadDeployNotesCache();
+
+
+function loadDeployNotesCache(){
+  try{
+    const raw = localStorage.getItem(DEPLOY_CACHE_KEY);
+    const data = raw ? JSON.parse(raw) : [];
+    return Array.isArray(data) ? data : [];
+  }catch(e){
+    return [];
+  }
+}
+
+function saveDeployNotesCache(){
+  try{
+    localStorage.setItem(DEPLOY_CACHE_KEY, JSON.stringify(deployNotes));
+  }catch(e){}
+}
 
 function loadAdminRules(){
   try{
@@ -1221,6 +1239,7 @@ async function syncDeployNotesFromServer(){
 
     if (Array.isArray(serverNotes)){
       deployNotes = serverNotes;
+      saveDeployNotesCache();
     }
 
     renderDeployNotesAdmin();
@@ -1237,7 +1256,7 @@ async function syncDeployNotesFromServer(){
 
     if (status){
       status.textContent =
-        "Không kết nối được Google Sheet. Dữ liệu đã lưu trên máy vẫn được giữ.";
+        "Không tải được thông báo từ máy chủ. Hãy kiểm tra Apps Script đã Deploy bản mới.";
     }
 
     renderDeployNotesAdmin();
@@ -2174,6 +2193,7 @@ document.getElementById("deployNoteForm").addEventListener("submit", async funct
     deployNotes.unshift(note);
   }
 
+  saveDeployNotesCache();
   renderDeployNotesAdmin();
   renderDeployNotices();
   renderRuleLinks();
