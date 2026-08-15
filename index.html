@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thư Viện Tài Liệu Học Tập</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+
+/* ======================================================================
+   BẢNG MÀU / FONT — "Thẻ mục lục thư viện" (card-catalog)
+   ====================================================================== */
+:root{
+  --bg:            #16241F;   /* nền bảng đen phòng đọc */
+  --bg-soft:       #1E332B;
+  --card:          #F3EAD3;   /* màu giấy thẻ mục lục */
+  --card-edge:     #E4D6AF;
+  --ink:           #22201A;   /* mực đen */
+  --ink-soft:      #5B5747;
+  --accent:        #C98A2C;   /* mực dấu mộc (mustard) */
+  --accent-dark:   #A66D1D;
+  --sage:          #7FA491;   /* nhãn xanh rêu */
+  --danger:        #A8493A;
+  --radius:        4px;
+  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --sans:  "Inter", -apple-system, "Segoe UI", sans-serif;
+  --mono:  "JetBrains Mono", "Courier New", monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(ellipse at top, #1c332b 0%, var(--bg) 60%);
+  color: var(--card);
+  font-family: var(--sans);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{ background: var(--accent); color:#1a1408; }
+button{ font-family: inherit; cursor:pointer; }
+a{ color: inherit; }
+
+/* subtle chalk texture */
+body::before{
+  content:"";
+  position:fixed; inset:0;
+  background-image: radial-gradient(rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 3px 3px;
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ======================================================================
+   MÀN HÌNH ĐĂNG NHẬP
+   ====================================================================== */
+#loginScreen{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  position:relative; z-index:1;
+}
+.catalog-card{
+  background: var(--card);
+  color: var(--ink);
+  width:100%;
+  max-width:400px;
+  border-radius: var(--radius);
+  padding:40px 36px 34px;
+  position:relative;
+  box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6), 0 2px 0 var(--card-edge);
+  border:1px solid var(--card-edge);
+}
+.catalog-card::before{
+  /* punch hole of an index card */
+  content:"";
+  position:absolute;
+  top:18px; left:50%;
+  transform:translateX(-50%);
+  width:14px; height:14px;
+  border-radius:50%;
+  background: var(--bg);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+}
+.catalog-eyebrow{
+  font-family: var(--mono);
+  font-size:11px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color: var(--accent-dark);
+  text-align:center;
+  margin:18px 0 6px;
+}
+.catalog-title{
+  font-family: var(--serif);
+  font-size:26px;
+  font-weight:700;
+  text-align:center;
+  margin:0 0 6px;
+  letter-spacing:-0.01em;
+}
+.catalog-sub{
+  text-align:center;
+  font-size:13px;
+  color: var(--ink-soft);
+  margin:0 0 28px;
+  line-height:1.5;
+}
+.field-label{
+  font-family: var(--mono);
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color: var(--ink-soft);
+  display:block;
+  margin-bottom:8px;
+}
+#codeInput{
+  width:100%;
+  font-family: var(--mono);
+  font-size:18px;
+  letter-spacing:.12em;
+  padding:13px 14px;
+  border:1.5px solid var(--card-edge);
+  border-bottom:2.5px solid var(--ink);
+  border-radius:2px;
+  background:#fffdf7;
+  color: var(--ink);
+  outline:none;
+  transition: border-color .15s ease;
+}
+#codeInput:focus{ border-color: var(--accent); }
+#loginForm{ display:flex; flex-direction:column; gap:18px; }
+#loginBtn{
+  background: var(--ink);
+  color: var(--card);
+  border:none;
+  padding:13px 16px;
+  border-radius:2px;
+  font-size:14px;
+  font-weight:600;
+  letter-spacing:.03em;
+  transition: transform .12s ease, background .15s ease;
+}
+#loginBtn:hover{ background: var(--accent-dark); }
+#loginBtn:active{ transform: scale(0.98); }
+#loginError{
+  font-size:12.5px;
+  color: var(--danger);
+  text-align:center;
+  min-height:16px;
+  font-weight:600;
+}
+.shake{ animation: shake .35s; }
+@keyframes shake{
+  0%,100%{ transform:translateX(0); }
+  20%{ transform:translateX(-6px); }
+  40%{ transform:translateX(6px); }
+  60%{ transform:translateX(-4px); }
+  80%{ transform:translateX(4px); }
+}
+
+/* ======================================================================
+   TRANG CHÍNH
+   ====================================================================== */
+#mainScreen{ display:none; position:relative; z-index:1; min-height:100vh; }
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:22px 32px;
+  border-bottom:1px solid rgba(243,234,211,0.12);
+}
+.brand{
+  display:flex; align-items:baseline; gap:10px;
+}
+.brand-mark{
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--accent);
+  border:1px solid var(--accent);
+  padding:2px 6px;
+  border-radius:2px;
+  letter-spacing:.08em;
+}
+.brand-name{
+  font-family: var(--serif);
+  font-size:20px;
+  font-weight:700;
+}
+.who{
+  font-family: var(--mono);
+  font-size:12px;
+  color: rgba(243,234,211,0.6);
+  display:flex; align-items:center; gap:14px;
+}
+#logoutBtn{
+  background:none;
+  border:1px solid rgba(243,234,211,0.3);
+  color: var(--card);
+  padding:6px 12px;
+  border-radius:2px;
+  font-size:12px;
+}
+#logoutBtn:hover{ border-color: var(--accent); color: var(--accent); }
+
+.layout{
+  display:grid;
+  grid-template-columns: 250px 1fr;
+  gap:0;
+  max-width:1180px;
+  margin:0 auto;
+}
+@media (max-width: 780px){
+  .layout{ grid-template-columns: 1fr; }
+}
+
+/* Danh mục dạng "tab thẻ mục lục" */
+.drawer{
+  padding:28px 12px 40px 28px;
+  border-right:1px solid rgba(243,234,211,0.1);
+}
+.drawer-label{
+  font-family: var(--mono);
+  font-size:10.5px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color: rgba(243,234,211,0.45);
+  margin:0 0 14px 4px;
+}
+.tab-btn{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  text-align:left;
+  background: transparent;
+  border:none;
+  border-left:3px solid transparent;
+  color: rgba(243,234,211,0.75);
+  padding:11px 12px;
+  font-size:14px;
+  border-radius: 0 3px 3px 0;
+  margin-bottom:2px;
+  transition: all .12s ease;
+}
+.tab-btn .ic{ font-size:16px; }
+.tab-btn .ct{
+  margin-left:auto;
+  font-family:var(--mono);
+  font-size:10.5px;
+  color: rgba(243,234,211,0.35);
+}
+.tab-btn:hover{ background: rgba(243,234,211,0.06); color:var(--card); }
+.tab-btn.active{
+  background: rgba(201,138,44,0.14);
+  border-left-color: var(--accent);
+  color: var(--card);
+  font-weight:600;
+}
+
+/* Nội dung tài liệu */
+.content{ padding:32px 32px 60px; }
+.content-header{ margin-bottom:22px; }
+.content-eyebrow{
+  font-family:var(--mono);
+  font-size:11px;
+  color: var(--sage);
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.content-title{
+  font-family: var(--serif);
+  font-size:28px;
+  font-weight:700;
+  margin:4px 0 8px;
+}
+.content-desc{
+  color: rgba(243,234,211,0.6);
+  font-size:14px;
+  max-width:560px;
+  line-height:1.6;
+}
+.search-row{
+  margin:18px 0 22px;
+}
+#searchInput{
+  width:100%;
+  max-width:320px;
+  background: rgba(243,234,211,0.06);
+  border:1px solid rgba(243,234,211,0.18);
+  color: var(--card);
+  padding:9px 12px;
+  border-radius:3px;
+  font-size:13px;
+  outline:none;
+}
+#searchInput:focus{ border-color: var(--accent); }
+#searchInput::placeholder{ color: rgba(243,234,211,0.35); }
+
+.card-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap:14px;
+}
+.item-card{
+  background: var(--card);
+  color: var(--ink);
+  border-radius:3px;
+  padding:18px 18px 16px;
+  border:1px solid var(--card-edge);
+  border-bottom:3px solid var(--card-edge);
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  text-decoration:none;
+  transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+}
+.item-card:hover{
+  transform: translateY(-3px);
+  border-bottom-color: var(--accent);
+  box-shadow: 0 14px 26px -14px rgba(0,0,0,0.5);
+}
+.item-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+.item-title{ font-family:var(--serif); font-weight:700; font-size:15.5px; line-height:1.35; }
+.item-type{
+  font-family:var(--mono);
+  font-size:9.5px;
+  letter-spacing:.05em;
+  background: var(--ink);
+  color: var(--card);
+  padding:2px 6px;
+  border-radius:2px;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.item-desc{ font-size:12.5px; color: var(--ink-soft); line-height:1.5; flex-grow:1; }
+.item-open{
+  font-family:var(--mono);
+  font-size:11px;
+  color: var(--accent-dark);
+  font-weight:600;
+  letter-spacing:.03em;
+}
+.empty-state{
+  color: rgba(243,234,211,0.4);
+  font-size:14px;
+  padding:40px 4px;
+  font-family:var(--mono);
+}
+
+.footnote{
+  max-width:1180px; margin:0 auto; padding:0 32px 30px;
+  font-size:11px; color:rgba(243,234,211,0.3); font-family:var(--mono);
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== MÀN HÌNH ĐĂNG NHẬP ===================== -->
+<div id="loginScreen">
+  <div class="catalog-card">
+    <div class="catalog-eyebrow">Thẻ tra cứu</div>
+    <h1 class="catalog-title">Thư Viện Tài Liệu</h1>
+    <p class="catalog-sub">Nhập mã truy cập của bạn để mở tủ tài liệu học tập.</p>
+    <form id="loginForm">
+      <div>
+        <label class="field-label" for="codeInput">Mã truy cập</label>
+        <input id="codeInput" type="text" autocomplete="off" placeholder="VD: SV001" />
+      </div>
+      <button id="loginBtn" type="submit">Mở tủ tài liệu</button>
+      <div id="loginError"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== TRANG CHÍNH ===================== -->
+<div id="mainScreen">
+  <div class="topbar">
+    <div class="brand">
+      <span class="brand-mark">LIB</span>
+      <span class="brand-name">Thư Viện Tài Liệu Học Tập</span>
+    </div>
+    <div class="who">
+      <span id="whoName">—</span>
+      <button id="logoutBtn">Đăng xuất</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <nav class="drawer">
+      <div class="drawer-label">Danh mục</div>
+      <div id="tabList"></div>
+    </nav>
+
+    <main class="content">
+      <div class="content-header">
+        <div class="content-eyebrow" id="catEyebrow">Danh mục</div>
+        <h2 class="content-title" id="catTitle">—</h2>
+        <p class="content-desc" id="catDesc"></p>
+      </div>
+      <div class="search-row">
+        <input id="searchInput" type="text" placeholder="Tìm tài liệu trong danh mục này…" />
+      </div>
+      <div class="card-grid" id="itemGrid"></div>
+    </main>
+  </div>
+  <div class="footnote">Chỉnh sửa danh sách mã truy cập &amp; tài liệu trong file index.html (phần CONFIG ở đầu script).</div>
+</div>
+
+
+<script>
+/* ======================================================================
+   ⚙️ CONFIG — CHỈNH SỬA Ở ĐÂY LÀ ĐỦ, KHÔNG CẦN SỬA CODE PHÍA DƯỚI
+   ====================================================================== */
+
+/* ----------------------------------------------------------------------
+   1) DANH SÁCH MÃ TRUY CẬP
+   - Thêm / xoá người dùng bằng cách thêm / xoá dòng { code, name } bên dưới.
+   - "code" là mã người dùng phải nhập để vào xem tài liệu (không phân biệt
+      hoa/thường, tự động bỏ khoảng trắng thừa).
+   - Sau khi sửa xong, chỉ cần upload lại file index.html này lên server
+     là danh sách được cập nhật ngay.
+   ---------------------------------------------------------------------- */
+const ACCESS_CODES = [
+  { code: "SV001", name: "Nguyễn Văn A" },
+  { code: "SV002", name: "Trần Thị B" },
+  { code: "SV003", name: "Lê Văn C" },
+  { code: "GV-ADMIN", name: "Quản trị viên" },
+];
+
+/* ----------------------------------------------------------------------
+   2) DANH MỤC & TÀI LIỆU (SẢN PHẨM)
+   - Mỗi phần tử trong CATEGORIES là một "rule/danh mục" hiện ở cột trái.
+   - Bấm vào danh mục sẽ hiện các "items" (tài liệu) tương ứng bên phải.
+   - "file": đường dẫn tới file thật (pdf, docx, pptx, xlsx, link Drive...).
+      => Nhớ tải file đó lên đúng đường dẫn này trên server / cùng thư mục
+         với index.html (ví dụ thư mục "files/").
+   - "type": nhãn hiển thị góc thẻ, ví dụ "PDF", "DOCX", "VIDEO", "LINK".
+   ---------------------------------------------------------------------- */
+const CATEGORIES = [
+  {
+    id: "toan",
+    icon: "📐",
+    name: "Toán học",
+    description: "Tài liệu, đề thi và bài giảng môn Toán.",
+    items: [
+      {
+        title: "Đạo hàm và ứng dụng",
+        desc: "Lý thuyết + bài tập chương đạo hàm, có lời giải chi tiết.",
+        file: "files/toan-dao-ham.pdf",
+        type: "PDF",
+      },
+      {
+        title: "Đề thi giữa kỳ 2024",
+        desc: "Đề thi tham khảo giữa học kỳ kèm đáp án.",
+        file: "files/toan-de-giua-ky-2024.pdf",
+        type: "PDF",
+      },
+    ],
+  },
+  {
+    id: "van",
+    icon: "📖",
+    name: "Ngữ văn",
+    description: "Bài giảng, dàn ý nghị luận, tổng hợp tác phẩm.",
+    items: [
+      {
+        title: "Dàn ý nghị luận xã hội",
+        desc: "Mẫu dàn ý + các luận điểm thường gặp.",
+        file: "files/van-dan-y-nlxh.docx",
+        type: "DOCX",
+      },
+    ],
+  },
+  {
+    id: "anh",
+    icon: "🔤",
+    name: "Tiếng Anh",
+    description: "Ngữ pháp, từ vựng và bài nghe.",
+    items: [
+      {
+        title: "Tổng hợp ngữ pháp cơ bản",
+        desc: "Toàn bộ ngữ pháp trọng tâm kèm bài tập.",
+        file: "files/anh-ngu-phap.pdf",
+        type: "PDF",
+      },
+    ],
+  },
+];
+
+/* ======================================================================
+   ⬇️ TỪ ĐÂY TRỞ XUỐNG LÀ LOGIC HOẠT ĐỘNG — KHÔNG CẦN CHỈNH
+   ====================================================================== */
+
+let activeCategoryId = CATEGORIES.length ? CATEGORIES[0].id : null;
+let currentUser = null; /* lưu tạm trong bộ nhớ trang thay vì sessionStorage,
+                            vì một số trình duyệt (mở file trực tiếp qua file://,
+                            hoặc chế độ duyệt web riêng tư) chặn sessionStorage
+                            và làm nút đăng nhập như "không phản ứng". */
+
+function normalize(str){
+  return (str || "").trim().toUpperCase();
+}
+
+function findUser(code){
+  const norm = normalize(code);
+  return ACCESS_CODES.find(u => normalize(u.code) === norm) || null;
+}
+
+function showMain(user){
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("mainScreen").style.display = "block";
+  document.getElementById("whoName").textContent = "Xin chào, " + user.name;
+  renderTabs();
+  renderCategory(activeCategoryId);
+}
+
+function showLogin(){
+  document.getElementById("mainScreen").style.display = "none";
+  document.getElementById("loginScreen").style.display = "flex";
+  document.getElementById("codeInput").value = "";
+  document.getElementById("codeInput").focus();
+}
+
+/* ---- xử lý đăng nhập ---- */
+document.getElementById("loginForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  try{
+    const input = document.getElementById("codeInput");
+    const errorBox = document.getElementById("loginError");
+    const user = findUser(input.value);
+
+    if (user){
+      errorBox.textContent = "";
+      currentUser = user;
+      try{ sessionStorage.setItem("lib_access_session", JSON.stringify(user)); }catch(storageErr){ /* bỏ qua nếu trình duyệt chặn storage */ }
+      showMain(user);
+    } else {
+      errorBox.textContent = "Mã truy cập không đúng. Vui lòng kiểm tra lại (không phân biệt hoa/thường).";
+      const card = document.querySelector(".catalog-card");
+      card.classList.remove("shake");
+      void card.offsetWidth; /* restart animation */
+      card.classList.add("shake");
+    }
+  } catch(err){
+    document.getElementById("loginError").textContent = "Có lỗi xảy ra: " + err.message;
+    console.error(err);
+  }
+});
+
+document.getElementById("logoutBtn").addEventListener("click", function(){
+  currentUser = null;
+  try{ sessionStorage.removeItem("lib_access_session"); }catch(e){}
+  showLogin();
+});
+
+/* ---- render cột danh mục ---- */
+function renderTabs(){
+  const list = document.getElementById("tabList");
+  list.innerHTML = "";
+  CATEGORIES.forEach(cat => {
+    const btn = document.createElement("button");
+    btn.className = "tab-btn" + (cat.id === activeCategoryId ? " active" : "");
+    btn.innerHTML =
+      '<span class="ic">' + cat.icon + '</span>' +
+      '<span>' + escapeHtml(cat.name) + '</span>' +
+      '<span class="ct">' + cat.items.length + '</span>';
+    btn.addEventListener("click", () => {
+      activeCategoryId = cat.id;
+      renderTabs();
+      renderCategory(cat.id);
+      document.getElementById("searchInput").value = "";
+    });
+    list.appendChild(btn);
+  });
+}
+
+/* ---- render nội dung danh mục đang chọn ---- */
+function renderCategory(catId){
+  const cat = CATEGORIES.find(c => c.id === catId);
+  const grid = document.getElementById("itemGrid");
+
+  if (!cat){
+    document.getElementById("catTitle").textContent = "Chưa có danh mục nào";
+    document.getElementById("catDesc").textContent = "Hãy thêm danh mục trong phần CONFIG của file index.html.";
+    grid.innerHTML = "";
+    return;
+  }
+
+  document.getElementById("catEyebrow").textContent = "Danh mục · " + cat.items.length + " tài liệu";
+  document.getElementById("catTitle").textContent = cat.icon + "  " + cat.name;
+  document.getElementById("catDesc").textContent = cat.description || "";
+
+  renderItems(cat.items);
+}
+
+function renderItems(items){
+  const grid = document.getElementById("itemGrid");
+  grid.innerHTML = "";
+
+  if (!items.length){
+    grid.innerHTML = '<div class="empty-state">Chưa có tài liệu nào trong danh mục này.</div>';
+    return;
+  }
+
+  items.forEach(item => {
+    const a = document.createElement("a");
+    a.className = "item-card";
+    a.href = item.file;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.innerHTML =
+      '<div class="item-top">' +
+        '<div class="item-title">' + escapeHtml(item.title) + '</div>' +
+        '<div class="item-type">' + escapeHtml(item.type || "FILE") + '</div>' +
+      '</div>' +
+      '<div class="item-desc">' + escapeHtml(item.desc || "") + '</div>' +
+      '<div class="item-open">Mở tài liệu →</div>';
+    grid.appendChild(a);
+  });
+}
+
+/* ---- tìm kiếm trong danh mục hiện tại ---- */
+document.getElementById("searchInput").addEventListener("input", function(e){
+  const q = e.target.value.trim().toLowerCase();
+  const cat = CATEGORIES.find(c => c.id === activeCategoryId);
+  if (!cat) return;
+  const filtered = !q
+    ? cat.items
+    : cat.items.filter(it =>
+        (it.title || "").toLowerCase().includes(q) ||
+        (it.desc || "").toLowerCase().includes(q)
+      );
+  renderItems(filtered);
+});
+
+function escapeHtml(str){
+  const d = document.createElement("div");
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+/* ---- khôi phục phiên đăng nhập nếu còn hiệu lực (trong cùng tab) ---- */
+(function init(){
+  try{
+    const raw = sessionStorage.getItem("lib_access_session");
+    if (raw){
+      const user = JSON.parse(raw);
+      if (findUser(user.code)){
+        currentUser = user;
+        showMain(user);
+        return;
+      }
+    }
+  }catch(e){
+    /* sessionStorage bị chặn (file:// hoặc chế độ riêng tư) — không sao,
+       chỉ đơn giản là không tự đăng nhập lại, người dùng nhập mã như bình thường */
+  }
+  showLogin();
+})();
+</script>
+
+</body>
+</html>
