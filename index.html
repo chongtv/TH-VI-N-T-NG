@@ -885,6 +885,90 @@ html, body {
 
 .sync-status{font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:rgba(243,234,211,.35);margin-left:auto}
 @media(max-width:780px){.sync-status{display:block;margin:4px 0 0}}
+
+/* ===== TRIỂN KHAI: GHI CHÚ NHANH / THÔNG BÁO ===== */
+.deploy-admin-panel{
+  margin:14px 0 18px;
+  padding:16px;
+  border:1px solid rgba(201,138,44,.25);
+  border-radius:4px;
+  background:rgba(201,138,44,.045);
+}
+.deploy-admin-title{
+  font-family:var(--serif);
+  font-weight:700;
+  font-size:18px;
+  margin-bottom:5px;
+}
+.deploy-admin-desc{
+  color:rgba(243,234,211,.48);
+  font-size:11px;
+  margin-bottom:12px;
+}
+.deploy-note-form{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:10px;
+}
+.deploy-note-input{
+  width:100%;
+  min-height:78px;
+  resize:vertical;
+}
+.deploy-notes-admin-list{
+  margin-top:10px;
+}
+.deploy-note-card{
+  margin-top:8px;
+  padding:12px;
+  border:1px solid rgba(243,234,211,.10);
+  background:rgba(0,0,0,.10);
+}
+.deploy-note-card-text{
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  line-height:1.5;
+}
+.deploy-note-actions{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:8px;
+}
+.deploy-notice-box{
+  width:100%;
+  margin-bottom:14px;
+}
+.deploy-notice{
+  margin-bottom:10px;
+  padding:14px 15px;
+  border-left:3px solid var(--accent);
+  border-radius:2px;
+  background:rgba(201,138,44,.10);
+}
+.deploy-notice-label{
+  font-family:var(--mono);
+  font-size:9px;
+  letter-spacing:.14em;
+  color:var(--accent);
+  margin-bottom:6px;
+}
+.deploy-notice-text{
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  line-height:1.55;
+}
+@media(max-width:780px){
+  .deploy-note-form{
+    grid-template-columns:1fr;
+  }
+  .deploy-note-input{
+    min-height:90px;
+  }
+  .deploy-notice{
+    padding:12px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -958,10 +1042,21 @@ html, body {
             <option value="ce">◈ CE</option>
             <option value="other">📦 SP Khác</option>
             <option value="tips">💡 Mẹo vặt</option>
+            <option value="deploy">📢 Triển khai</option>
           </select>
           <button id="saveRuleBtn" class="admin-btn" type="submit">Thêm Rule</button>
         </form>
         <div id="adminRuleList" class="admin-list"></div>
+        <section id="deployAdminPanel" class="deploy-admin-panel" style="display:none;">
+          <div class="deploy-admin-title">📢 Quản trị Triển khai</div>
+          <div class="deploy-admin-desc">Ghi chú nhanh cho User. Nội dung sẽ hiển thị như thông báo.</div>
+          <form id="deployNoteForm" class="deploy-note-form">
+            <textarea id="deployNoteInput" class="admin-input deploy-note-input"
+              placeholder="Ví dụ: Triển khai chương trình mới từ ngày 18/08..." rows="3" required></textarea>
+            <button class="admin-btn" type="submit">Thêm thông báo</button>
+          </form>
+          <div id="deployNotesAdminList" class="deploy-notes-admin-list"></div>
+        </section>
       </section>
       <section class="quick-search-panel">
         <div class="quick-search-title">Tìm kiếm nhanh</div>
@@ -1030,6 +1125,7 @@ const ACCESS_DATA_SHEET_RULE = {
 const RULES_STORAGE_KEY = "library_admin_rules_v1";
 let editingRuleIndex = -1;
 let adminRules = loadAdminRules();
+let deployNotes = [];
 
 function loadAdminRules(){
   try{
@@ -1053,6 +1149,170 @@ function makeRuleId(name, url){
     hash |= 0;
   }
   return "r_" + Math.abs(hash) + "_" + str.length;
+}
+
+
+function apiGetDeployNotes(){
+  return new Promise((resolve, reject) => {
+    const callbackName = "__deployRead_" + Date.now() + "_" +
+      Math.random().toString(36).slice(2);
+    const script = document.createElement("script");
+    let finished = false;
+
+    const cleanup = () => {
+      clearTimeout(timer);
+      try { delete window[callbackName]; } catch(e) {}
+      if (script.parentNode) script.parentNode.removeChild(script);
+    };
+
+    const done = (ok, value) => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      ok ? resolve(value) : reject(value);
+    };
+
+    const timer = setTimeout(
+      () => done(false, new Error("Không tải được thông báo.")),
+      15000
+    );
+
+    window[callbackName] = data => {
+      if (data && data.success && Array.isArray(data.notes)) {
+        done(true, data.notes);
+      } else {
+        done(false, new Error("Dữ liệu thông báo không hợp lệ."));
+      }
+    };
+
+    script.onerror = () =>
+      done(false, new Error("Không kết nối được Apps Script."));
+
+    script.src =
+      ACCESS_LOG_API_URL +
+      "?action=getDeployNotes&callback=" +
+      encodeURIComponent(callbackName) +
+      "&ts=" + Date.now();
+
+    document.head.appendChild(script);
+  });
+}
+
+async function syncDeployNotesFromServer(){
+  try{
+    deployNotes = await apiGetDeployNotes();
+    renderDeployNotesAdmin();
+    renderRuleLinks();
+    updateDeployAdminPanel();
+    renderDeployNotices();
+  }catch(e){
+    console.warn("Không tải được thông báo Triển khai:", e);
+    renderDeployNotices();
+  }
+}
+
+function renderDeployNotices(){
+  const content = document.querySelector(".content");
+  if (!content) return;
+
+  let box = document.getElementById("deployNoticeBox");
+
+  if (!box){
+    box = document.createElement("div");
+    box.id = "deployNoticeBox";
+    box.className = "deploy-notice-box";
+
+    const searchPanel = content.querySelector(".quick-search-panel");
+    if (searchPanel) content.insertBefore(box, searchPanel);
+    else content.prepend(box);
+  }
+
+  box.innerHTML = "";
+
+  /* Chỉ hiện nội dung thông báo khi User/Admin đang mở thư mục Triển khai. */
+  if (activeCategoryId !== "deploy" || !deployNotes.length){
+    box.style.display = "none";
+    return;
+  }
+
+  box.style.display = "block";
+
+  deployNotes.forEach(note => {
+    const item = document.createElement("div");
+    item.className = "deploy-notice";
+
+    const label = document.createElement("div");
+    label.className = "deploy-notice-label";
+    label.textContent = "📢 THÔNG BÁO TRIỂN KHAI";
+
+    const text = document.createElement("div");
+    text.className = "deploy-notice-text";
+    text.textContent = note.content;
+
+    item.appendChild(label);
+    item.appendChild(text);
+    box.appendChild(item);
+  });
+}
+
+function renderDeployNotesAdmin(){
+  const list = document.getElementById("deployNotesAdminList");
+  if (!list) return;
+
+  list.innerHTML = "";
+
+  if (!deployNotes.length){
+    list.innerHTML =
+      '<div class="admin-sub">Chưa có thông báo nào.</div>';
+    return;
+  }
+
+  deployNotes.forEach(note => {
+    const card = document.createElement("div");
+    card.className = "deploy-note-card";
+
+    const text = document.createElement("div");
+    text.className = "deploy-note-card-text";
+    text.textContent = note.content;
+
+    const actions = document.createElement("div");
+    actions.className = "deploy-note-actions";
+
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "delete-rule";
+    del.textContent = "Xóa";
+
+    del.addEventListener("click", async () => {
+      if (!confirm("Xóa thông báo này?")) return;
+
+      const ok = await apiPostRule({
+        action:"deleteDeployNote",
+        id:note.id
+      });
+
+      if (ok){
+        await syncDeployNotesFromServer();
+      }else{
+        alert("Không thể xóa thông báo. Vui lòng thử lại.");
+      }
+    });
+
+    actions.appendChild(del);
+    card.appendChild(text);
+    card.appendChild(actions);
+    list.appendChild(card);
+  });
+}
+
+function updateDeployAdminPanel(){
+  const panel = document.getElementById("deployAdminPanel");
+  if (!panel) return;
+
+  panel.style.display =
+    (isAdmin(currentUser) && activeCategoryId === "deploy")
+      ? "block"
+      : "none";
 }
 
 function apiGetRules(){
@@ -1495,7 +1755,9 @@ function renderRuleLinks(){
 
     const count = document.createElement("span");
     count.className = "ct";
-    count.textContent = rules.length;
+    count.textContent = (cat.id === "deploy")
+      ? deployNotes.length
+      : rules.length;
 
     head.appendChild(icon);
     head.appendChild(name);
@@ -1508,6 +1770,8 @@ function renderRuleLinks(){
     head.addEventListener("click", () => {
       activeCategoryId = cat.id;
       renderRuleLinks();
+      updateDeployAdminPanel();
+      renderDeployNotices();
     });
 
     folder.appendChild(head);
@@ -1541,11 +1805,25 @@ function renderRuleLinks(){
       children.appendChild(btn);
     });
 
-    if (!rules.length){
+    if (!rules.length && cat.id !== "deploy"){
       const empty = document.createElement("div");
       empty.className = "category-empty";
       empty.textContent = "Chưa có Rule";
       children.appendChild(empty);
+    }
+
+    if (cat.id === "deploy"){
+      if (deployNotes.length){
+        const noteInfo = document.createElement("div");
+        noteInfo.className = "category-empty";
+        noteInfo.textContent = "📢 " + deployNotes.length + " thông báo — bấm để xem";
+        children.appendChild(noteInfo);
+      }else{
+        const noteInfo = document.createElement("div");
+        noteInfo.className = "category-empty";
+        noteInfo.textContent = "Chưa có thông báo";
+        children.appendChild(noteInfo);
+      }
     }
 
     folder.appendChild(children);
@@ -1614,6 +1892,7 @@ function openAdminPanel(){
   document.getElementById("adminPanel").style.display = "block";
   document.getElementById("adminToggleBtn").style.display = "inline-block";
   renderAdminRules();
+  syncDeployNotesFromServer();
   if (isAdmin(currentUser)){
     syncLocalRulesToServer().then(() => setTimeout(syncRulesFromServer, 1200));
   }else{
@@ -1630,7 +1909,8 @@ const PARENT_CATEGORIES = [
   {id:"tablet", name:"Tablet", icon:"▣"},
   {id:"ce", name:"CE", icon:"◈"},
   {id:"other", name:"SP Khác", icon:"📦"},
-  {id:"tips", name:"Mẹo vặt", icon:"💡"}
+  {id:"tips", name:"Mẹo vặt", icon:"💡"},
+  {id:"deploy", name:"Triển khai", icon:"📢"}
 ];
 
 let activeCategoryId = PARENT_CATEGORIES[0].id;
@@ -1664,6 +1944,8 @@ function showMain(user){
   renderTabs();
   renderRuleLinks();
   renderCategory(activeCategoryId);
+  updateDeployAdminPanel();
+  syncDeployNotesFromServer();
 
   /* Admin đồng bộ Rule đang có trên máy lên server trước.
      Sau đó tất cả thiết bị tải danh sách Rule chung. */
@@ -1795,6 +2077,38 @@ document.getElementById("adminToggleBtn").addEventListener("click", function(){
 
 document.getElementById("closeAdminBtn").addEventListener("click", closeAdminPanel);
 
+
+document.getElementById("deployNoteForm").addEventListener("submit", async function(e){
+  e.preventDefault();
+
+  if (!isAdmin(currentUser)) return;
+
+  const input = document.getElementById("deployNoteInput");
+  const content = input.value.trim();
+
+  if (!content) return;
+
+  const note = {
+    id: "deploy_" + Date.now() + "_" +
+      Math.random().toString(36).slice(2),
+    content: content
+  };
+
+  const ok = await apiPostRule({
+    action:"saveDeployNote",
+    id:note.id,
+    content:note.content
+  });
+
+  if (!ok){
+    alert("Không thể lưu thông báo. Vui lòng thử lại.");
+    return;
+  }
+
+  input.value = "";
+  await syncDeployNotesFromServer();
+});
+
 document.getElementById("adminRuleForm").addEventListener("submit", function(e){
   e.preventDefault();
   if (!isAdmin(currentUser)) return;
@@ -1868,6 +2182,8 @@ function renderTabs(){
 function renderCategory(catId){
   activeCategoryId = catId || activeCategoryId || PARENT_CATEGORIES[0].id;
   renderRuleLinks();
+  updateDeployAdminPanel();
+  renderDeployNotices();
 }
 
 function renderItems(items){
