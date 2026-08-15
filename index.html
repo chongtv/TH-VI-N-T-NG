@@ -355,6 +355,100 @@ body::before{
   max-width:1180px; margin:0 auto; padding:0 32px 30px;
   font-size:11px; color:rgba(243,234,211,0.3); font-family:var(--mono);
 }
+
+/* ===================== KHU VỰC QUẢN TRỊ ===================== */
+#adminPanel{display:none;margin:0 0 24px;padding:20px;background:rgba(243,234,211,.06);border:1px solid rgba(243,234,211,.14);border-radius:4px}
+.admin-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.admin-title{font-family:var(--serif);font-size:20px;font-weight:700;margin:0}
+.admin-sub{margin:4px 0 0;font-size:12px;color:rgba(243,234,211,.55)}
+.admin-form{display:grid;grid-template-columns:1fr 1.5fr auto;gap:10px;margin-bottom:16px}
+.admin-input{width:100%;background:#fffdf7;color:var(--ink);border:1px solid var(--card-edge);padding:10px 11px;border-radius:3px;outline:none}
+.admin-input:focus{border-color:var(--accent)}
+.admin-btn{border:1px solid var(--accent);background:var(--accent);color:#1a1408;padding:10px 14px;border-radius:3px;font-weight:700}
+.admin-btn:hover{background:#d69a3c}
+.admin-btn.secondary{background:transparent;color:var(--card);border-color:rgba(243,234,211,.25)}
+.admin-list{display:flex;flex-direction:column;gap:8px}
+.admin-rule{display:grid;grid-template-columns:1fr 1.5fr auto;gap:10px;align-items:center;padding:10px;background:rgba(0,0,0,.12);border:1px solid rgba(243,234,211,.08);border-radius:3px}
+.admin-rule-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.admin-rule-url{font-family:var(--mono);font-size:10px;color:rgba(243,234,211,.5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.admin-actions{display:flex;gap:6px}
+.admin-actions button{padding:6px 9px;font-size:11px;border-radius:2px;background:transparent;color:var(--card);border:1px solid rgba(243,234,211,.22)}
+.admin-actions .delete-rule{color:#e7a096;border-color:rgba(168,73,58,.5)}
+.rule-link{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:none;border-left:3px solid transparent;color:rgba(243,234,211,.75);padding:11px 12px;font-size:14px;border-radius:0 3px 3px 0;margin-bottom:2px;transition:all .12s ease}
+.rule-link:hover{background:rgba(243,234,211,.06);color:var(--card)}
+.rule-link .ic{font-size:16px}
+.admin-badge{font-family:var(--mono);font-size:9px;color:var(--accent);border:1px solid rgba(201,138,44,.45);padding:2px 5px;border-radius:2px;margin-left:auto}
+@media(max-width:700px){.admin-form,.admin-rule{grid-template-columns:1fr}.admin-actions{justify-content:flex-start}}
+
+
+/* ===================== TAB TÌM KIẾM RULE ===================== */
+.rule-search-panel{
+  max-width:680px;
+}
+.rule-search-title{
+  font-family:var(--serif);
+  font-size:28px;
+  font-weight:700;
+  margin:4px 0 8px;
+}
+.rule-search-desc{
+  color:rgba(243,234,211,.6);
+  font-size:14px;
+  line-height:1.6;
+  margin-bottom:18px;
+}
+#ruleSearchInput{
+  width:100%;
+  max-width:520px;
+  background:rgba(243,234,211,.06);
+  border:1px solid rgba(243,234,211,.18);
+  color:var(--card);
+  padding:12px 14px;
+  border-radius:3px;
+  font-size:14px;
+  outline:none;
+}
+#ruleSearchInput:focus{border-color:var(--accent)}
+#ruleSearchInput::placeholder{color:rgba(243,234,211,.35)}
+.rule-suggestions{
+  margin-top:12px;
+  max-width:520px;
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+.rule-suggestion{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  text-align:left;
+  background:rgba(243,234,211,.06);
+  color:var(--card);
+  border:1px solid rgba(243,234,211,.12);
+  padding:11px 12px;
+  border-radius:3px;
+  cursor:pointer;
+}
+.rule-suggestion:hover{
+  border-color:var(--accent);
+  background:rgba(201,138,44,.12);
+}
+.rule-suggestion .suggest-icon{font-size:14px}
+.rule-suggestion .suggest-name{font-weight:600}
+.rule-suggestion .suggest-open{
+  margin-left:auto;
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--accent);
+}
+.rule-search-empty{
+  color:rgba(243,234,211,.4);
+  font-size:13px;
+  font-family:var(--mono);
+  padding:10px 2px;
+}
+
 </style>
 </head>
 <body>
@@ -367,8 +461,12 @@ body::before{
     <p class="catalog-sub">Nhập mã truy cập của bạn để mở tủ tài liệu học tập.</p>
     <form id="loginForm">
       <div>
-        <label class="field-label" for="codeInput">Mã truy cập</label>
-        <input id="codeInput" type="text" autocomplete="off" placeholder="VD: SV001" />
+        <label class="field-label" for="codeInput">Tài khoản / Mã truy cập</label>
+        <input id="codeInput" type="text" autocomplete="username" placeholder="VD: SV001 hoặc admin" />
+      </div>
+      <div id="passwordWrap">
+        <label class="field-label" for="passwordInput">Mật khẩu</label>
+        <input id="passwordInput" type="password" autocomplete="current-password" placeholder="Mật khẩu (chỉ cần với admin)" />
       </div>
       <button id="loginBtn" type="submit">Mở tủ tài liệu</button>
       <div id="loginError"></div>
@@ -385,6 +483,7 @@ body::before{
     </div>
     <div class="who">
       <span id="whoName">—</span>
+      <button id="adminToggleBtn" type="button" style="display:none;background:none;border:1px solid rgba(243,234,211,.3);color:var(--card);padding:6px 12px;border-radius:2px;font-size:12px;">Quản trị</button>
       <button id="logoutBtn">Đăng xuất</button>
     </div>
   </div>
@@ -396,18 +495,41 @@ body::before{
     </nav>
 
     <main class="content">
-      <div class="content-header">
+      <div class="content-header rule-search-panel">
+        <div class="content-eyebrow">Tìm kiếm</div>
+        <h2 class="rule-search-title">Tìm kiếm Rule</h2>
+        <p class="rule-search-desc">Nhập từ khóa để tìm nhanh các Rule đã được quản trị viên thêm vào.</p>
+        <input id="ruleSearchInput" type="text" autocomplete="off" placeholder="Nhập từ khóa Rule…" />
+        <div id="ruleSuggestions" class="rule-suggestions"></div>
+      </div>
+
+      <div id="legacyCategoryContent" style="display:none">
         <div class="content-eyebrow" id="catEyebrow">Danh mục</div>
         <h2 class="content-title" id="catTitle">—</h2>
         <p class="content-desc" id="catDesc"></p>
       </div>
-      <div class="search-row">
+      <section id="adminPanel">
+        <div class="admin-head">
+          <div>
+            <h3 class="admin-title">⚙ Quản trị Rule</h3>
+            <p class="admin-sub">Thêm, sửa hoặc xoá Rule. Tên Rule sẽ là nút bấm và dẫn tới link bạn nhập.</p>
+          </div>
+          <button id="closeAdminBtn" class="admin-btn secondary" type="button">Ẩn</button>
+        </div>
+        <form id="adminRuleForm" class="admin-form">
+          <input id="ruleNameInput" class="admin-input" type="text" placeholder="Tên Rule" required />
+          <input id="ruleUrlInput" class="admin-input" type="url" placeholder="https://example.com/..." required />
+          <button id="saveRuleBtn" class="admin-btn" type="submit">Thêm Rule</button>
+        </form>
+        <div id="adminRuleList" class="admin-list"></div>
+      </section>
+      <div class="search-row" style="display:none">
         <input id="searchInput" type="text" placeholder="Tìm tài liệu trong danh mục này…" />
       </div>
-      <div class="card-grid" id="itemGrid"></div>
+      <div class="card-grid" id="itemGrid" style="display:none"></div>
     </main>
   </div>
-  <div class="footnote">Chỉnh sửa danh sách mã truy cập &amp; tài liệu trong file index.html (phần CONFIG ở đầu script).</div>
+  <div class="footnote">Nhập từ khóa ở ô Tìm kiếm để tìm nhanh Rule trong danh mục.</div>
 </div>
 
 
@@ -428,8 +550,13 @@ const ACCESS_CODES = [
   { code: "SV001", name: "Nguyễn Văn A" },
   { code: "SV002", name: "Trần Thị B" },
   { code: "SV003", name: "Lê Văn C" },
-  { code: "GV-ADMIN", name: "Quản trị viên" },
 ];
+
+const ADMIN_ACCOUNT = {
+  username: "admin",
+  password: "P@ssw0rd",
+  name: "Quản trị viên"
+};
 
 /* ----------------------------------------------------------------------
    2) DANH MỤC & TÀI LIỆU (SẢN PHẨM)
@@ -440,60 +567,194 @@ const ACCESS_CODES = [
          với index.html (ví dụ thư mục "files/").
    - "type": nhãn hiển thị góc thẻ, ví dụ "PDF", "DOCX", "VIDEO", "LINK".
    ---------------------------------------------------------------------- */
-const CATEGORIES = [
-  {
-    id: "toan",
-    icon: "📐",
-    name: "Toán học",
-    description: "Tài liệu, đề thi và bài giảng môn Toán.",
-    items: [
-      {
-        title: "Đạo hàm và ứng dụng",
-        desc: "Lý thuyết + bài tập chương đạo hàm, có lời giải chi tiết.",
-        file: "files/toan-dao-ham.pdf",
-        type: "PDF",
-      },
-      {
-        title: "Đề thi giữa kỳ 2024",
-        desc: "Đề thi tham khảo giữa học kỳ kèm đáp án.",
-        file: "files/toan-de-giua-ky-2024.pdf",
-        type: "PDF",
-      },
-    ],
-  },
-  {
-    id: "van",
-    icon: "📖",
-    name: "Ngữ văn",
-    description: "Bài giảng, dàn ý nghị luận, tổng hợp tác phẩm.",
-    items: [
-      {
-        title: "Dàn ý nghị luận xã hội",
-        desc: "Mẫu dàn ý + các luận điểm thường gặp.",
-        file: "files/van-dan-y-nlxh.docx",
-        type: "DOCX",
-      },
-    ],
-  },
-  {
-    id: "anh",
-    icon: "🔤",
-    name: "Tiếng Anh",
-    description: "Ngữ pháp, từ vựng và bài nghe.",
-    items: [
-      {
-        title: "Tổng hợp ngữ pháp cơ bản",
-        desc: "Toàn bộ ngữ pháp trọng tâm kèm bài tập.",
-        file: "files/anh-ngu-phap.pdf",
-        type: "PDF",
-      },
-    ],
-  },
-];
+const CATEGORIES = [];
 
 /* ======================================================================
    ⬇️ TỪ ĐÂY TRỞ XUỐNG LÀ LOGIC HOẠT ĐỘNG — KHÔNG CẦN CHỈNH
    ====================================================================== */
+
+
+const RULES_STORAGE_KEY = "library_admin_rules_v1";
+let editingRuleIndex = -1;
+let adminRules = loadAdminRules();
+
+function loadAdminRules(){
+  try{
+    const raw = localStorage.getItem(RULES_STORAGE_KEY);
+    const data = raw ? JSON.parse(raw) : [];
+    return Array.isArray(data) ? data : [];
+  }catch(e){ return []; }
+}
+
+function saveAdminRules(){
+  try{ localStorage.setItem(RULES_STORAGE_KEY, JSON.stringify(adminRules)); }
+  catch(e){ alert("Không thể lưu Rule trên trình duyệt này."); }
+}
+
+function isAdmin(user){
+  return !!user && user.role === "admin";
+}
+
+function renderAdminRules(){
+  const list = document.getElementById("adminRuleList");
+  if (!list) return;
+  list.innerHTML = "";
+
+  if (!adminRules.length){
+    list.innerHTML = '<div class="admin-sub">Chưa có Rule nào.</div>';
+    return;
+  }
+
+  adminRules.forEach((rule, index) => {
+    const row = document.createElement("div");
+    row.className = "admin-rule";
+
+    const name = document.createElement("div");
+    name.className = "admin-rule-name";
+    name.textContent = rule.name;
+
+    const url = document.createElement("div");
+    url.className = "admin-rule-url";
+    url.textContent = rule.url;
+
+    const actions = document.createElement("div");
+    actions.className = "admin-actions";
+
+    const edit = document.createElement("button");
+    edit.type = "button";
+    edit.textContent = "Sửa";
+    edit.addEventListener("click", () => startEditRule(index));
+
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "delete-rule";
+    del.textContent = "Xoá";
+    del.addEventListener("click", () => deleteRule(index));
+
+    actions.appendChild(edit);
+    actions.appendChild(del);
+    row.appendChild(name);
+    row.appendChild(url);
+    row.appendChild(actions);
+    list.appendChild(row);
+  });
+}
+
+function renderRuleLinks(){
+  const list = document.getElementById("tabList");
+  if (!list) return;
+
+  list.querySelectorAll(".dynamic-rule").forEach(el => el.remove());
+
+  adminRules.forEach(rule => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "rule-link dynamic-rule";
+    btn.title = rule.url;
+
+    const ic = document.createElement("span");
+    ic.className = "ic";
+    ic.textContent = "🔗";
+
+    const text = document.createElement("span");
+    text.textContent = rule.name;
+
+    const badge = document.createElement("span");
+    badge.className = "admin-badge";
+    badge.textContent = "RULE";
+
+    btn.appendChild(ic);
+    btn.appendChild(text);
+    btn.appendChild(badge);
+
+    btn.addEventListener("click", () => window.open(rule.url, "_blank", "noopener,noreferrer"));
+    list.appendChild(btn);
+  });
+}
+
+
+function renderRuleSuggestions(query){
+  const box = document.getElementById("ruleSuggestions");
+  if (!box) return;
+
+  const q = (query || "").trim().toLowerCase();
+  box.innerHTML = "";
+
+  /* Chưa nhập gì thì không xổ toàn bộ Rule, chỉ hiện hướng dẫn */
+  if (!q){
+    box.innerHTML = '<div class="rule-search-empty">Nhập từ khóa để bắt đầu tìm kiếm.</div>';
+    return;
+  }
+
+  const matches = adminRules.filter(rule =>
+    (rule.name || "").toLowerCase().includes(q)
+  );
+
+  if (!matches.length){
+    box.innerHTML = '<div class="rule-search-empty">Không tìm thấy Rule phù hợp.</div>';
+    return;
+  }
+
+  matches.forEach(rule => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "rule-suggestion";
+
+    const icon = document.createElement("span");
+    icon.className = "suggest-icon";
+    icon.textContent = "🔗";
+
+    const name = document.createElement("span");
+    name.className = "suggest-name";
+    name.textContent = rule.name;
+
+    const open = document.createElement("span");
+    open.className = "suggest-open";
+    open.textContent = "MỞ →";
+
+    btn.appendChild(icon);
+    btn.appendChild(name);
+    btn.appendChild(open);
+
+    btn.addEventListener("click", () => {
+      window.open(rule.url, "_blank", "noopener,noreferrer");
+    });
+
+    box.appendChild(btn);
+  });
+}
+
+function startEditRule(index){
+  const rule = adminRules[index];
+  if (!rule) return;
+  editingRuleIndex = index;
+  document.getElementById("ruleNameInput").value = rule.name;
+  document.getElementById("ruleUrlInput").value = rule.url;
+  document.getElementById("saveRuleBtn").textContent = "Lưu thay đổi";
+  document.getElementById("ruleNameInput").focus();
+}
+
+function deleteRule(index){
+  const rule = adminRules[index];
+  if (!rule || !confirm('Xoá Rule "' + rule.name + '"?')) return;
+  adminRules.splice(index, 1);
+  saveAdminRules();
+  renderAdminRules();
+  renderRuleLinks();
+  const search = document.getElementById("ruleSearchInput");
+  if (search) renderRuleSuggestions(search.value);
+}
+
+function openAdminPanel(){
+  if (!isAdmin(currentUser)) return;
+  document.getElementById("adminPanel").style.display = "block";
+  document.getElementById("adminToggleBtn").style.display = "inline-block";
+  renderAdminRules();
+}
+
+function closeAdminPanel(){
+  document.getElementById("adminPanel").style.display = "none";
+}
 
 let activeCategoryId = CATEGORIES.length ? CATEGORIES[0].id : null;
 let currentUser = null; /* lưu tạm trong bộ nhớ trang thay vì sessionStorage,
@@ -514,38 +775,91 @@ function showMain(user){
   document.getElementById("loginScreen").style.display = "none";
   document.getElementById("mainScreen").style.display = "block";
   document.getElementById("whoName").textContent = "Xin chào, " + user.name;
+
+  const adminBtn = document.getElementById("adminToggleBtn");
+  if (isAdmin(user)){
+    adminBtn.style.display = "inline-block";
+  }else{
+    adminBtn.style.display = "none";
+    closeAdminPanel();
+  }
+
   renderTabs();
-  renderCategory(activeCategoryId);
+  renderRuleLinks();
+  renderRuleSuggestions(document.getElementById("ruleSearchInput").value);
 }
 
 function showLogin(){
   document.getElementById("mainScreen").style.display = "none";
   document.getElementById("loginScreen").style.display = "flex";
   document.getElementById("codeInput").value = "";
+  document.getElementById("passwordInput").value = "";
+  closeAdminPanel();
+  document.getElementById("adminToggleBtn").style.display = "none";
   document.getElementById("codeInput").focus();
 }
 
 /* ---- xử lý đăng nhập ---- */
 document.getElementById("loginForm").addEventListener("submit", function(e){
   e.preventDefault();
+
   try{
     const input = document.getElementById("codeInput");
+    const passwordInput = document.getElementById("passwordInput");
     const errorBox = document.getElementById("loginError");
+
+    const username = normalize(input.value);
+    const password = passwordInput.value;
+
+    /* Đăng nhập Admin */
+    if (username === normalize(ADMIN_ACCOUNT.username)){
+      if (password === ADMIN_ACCOUNT.password){
+        const adminUser = {
+          code: ADMIN_ACCOUNT.username,
+          name: ADMIN_ACCOUNT.name,
+          role: "admin"
+        };
+
+        errorBox.textContent = "";
+        currentUser = adminUser;
+
+        try{
+          sessionStorage.setItem("lib_access_session", JSON.stringify(adminUser));
+        }catch(storageErr){}
+
+        showMain(adminUser);
+        openAdminPanel();
+        return;
+      }
+
+      errorBox.textContent = "Mật khẩu quản trị viên không đúng.";
+      const card = document.querySelector(".catalog-card");
+      card.classList.remove("shake");
+      void card.offsetWidth;
+      card.classList.add("shake");
+      return;
+    }
+
+    /* Người dùng thường vẫn đăng nhập bằng mã truy cập như trước */
     const user = findUser(input.value);
 
     if (user){
       errorBox.textContent = "";
-      currentUser = user;
-      try{ sessionStorage.setItem("lib_access_session", JSON.stringify(user)); }catch(storageErr){ /* bỏ qua nếu trình duyệt chặn storage */ }
-      showMain(user);
-    } else {
-      errorBox.textContent = "Mã truy cập không đúng. Vui lòng kiểm tra lại (không phân biệt hoa/thường).";
+      currentUser = Object.assign({}, user, {role:"user"});
+
+      try{
+        sessionStorage.setItem("lib_access_session", JSON.stringify(currentUser));
+      }catch(storageErr){}
+
+      showMain(currentUser);
+    }else{
+      errorBox.textContent = "Tài khoản / mã truy cập không đúng. Vui lòng kiểm tra lại.";
       const card = document.querySelector(".catalog-card");
       card.classList.remove("shake");
-      void card.offsetWidth; /* restart animation */
+      void card.offsetWidth;
       card.classList.add("shake");
     }
-  } catch(err){
+  }catch(err){
     document.getElementById("loginError").textContent = "Có lỗi xảy ra: " + err.message;
     console.error(err);
   }
@@ -555,6 +869,52 @@ document.getElementById("logoutBtn").addEventListener("click", function(){
   currentUser = null;
   try{ sessionStorage.removeItem("lib_access_session"); }catch(e){}
   showLogin();
+});
+
+/* ---- chức năng quản trị Rule ---- */
+document.getElementById("adminToggleBtn").addEventListener("click", function(){
+  if (document.getElementById("adminPanel").style.display === "block"){
+    closeAdminPanel();
+  }else{
+    openAdminPanel();
+  }
+});
+
+document.getElementById("closeAdminBtn").addEventListener("click", closeAdminPanel);
+
+document.getElementById("adminRuleForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  if (!isAdmin(currentUser)) return;
+
+  const nameInput = document.getElementById("ruleNameInput");
+  const urlInput = document.getElementById("ruleUrlInput");
+  const name = nameInput.value.trim();
+  let url = urlInput.value.trim();
+
+  if (!name || !url) return;
+
+  if (!/^https?:\/\//i.test(url)){
+    url = "https://" + url;
+  }
+
+  if (editingRuleIndex >= 0 && adminRules[editingRuleIndex]){
+    adminRules[editingRuleIndex] = {name, url};
+    editingRuleIndex = -1;
+    document.getElementById("saveRuleBtn").textContent = "Thêm Rule";
+  }else{
+    adminRules.push({name, url});
+  }
+
+  saveAdminRules();
+  renderAdminRules();
+  renderRuleLinks();
+
+  const ruleSearch = document.getElementById("ruleSearchInput");
+  if (ruleSearch) renderRuleSuggestions(ruleSearch.value);
+
+  nameInput.value = "";
+  urlInput.value = "";
+  nameInput.focus();
 });
 
 /* ---- render cột danh mục ---- */
@@ -585,7 +945,7 @@ function renderCategory(catId){
 
   if (!cat){
     document.getElementById("catTitle").textContent = "Chưa có danh mục nào";
-    document.getElementById("catDesc").textContent = "Hãy thêm danh mục trong phần CONFIG của file index.html.";
+    document.getElementById("catDesc").textContent = "Quản trị viên hãy đăng nhập và thêm Rule ở khu vực Quản trị.";
     grid.innerHTML = "";
     return;
   }
@@ -623,6 +983,14 @@ function renderItems(items){
   });
 }
 
+/* ---- tìm kiếm các Rule do Admin thêm ---- */
+document.getElementById("ruleSearchInput").addEventListener("input", function(e){
+  renderRuleSuggestions(e.target.value);
+});
+
+/* Khởi tạo trạng thái ô tìm kiếm */
+renderRuleSuggestions("");
+
 /* ---- tìm kiếm trong danh mục hiện tại ---- */
 document.getElementById("searchInput").addEventListener("input", function(e){
   const q = e.target.value.trim().toLowerCase();
@@ -649,9 +1017,10 @@ function escapeHtml(str){
     const raw = sessionStorage.getItem("lib_access_session");
     if (raw){
       const user = JSON.parse(raw);
-      if (findUser(user.code)){
+      if ((user.role === "admin" && user.code === ADMIN_ACCOUNT.username) || findUser(user.code)){
         currentUser = user;
         showMain(user);
+        if (isAdmin(user)) openAdminPanel();
         return;
       }
     }
