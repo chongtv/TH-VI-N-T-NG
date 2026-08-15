@@ -767,6 +767,121 @@ html, body {
   }
 }
 
+
+/* ===== FIX DANH MỤC RULE TRÊN ĐIỆN THOẠI ===== */
+@media (max-width:780px){
+  .drawer{
+    display:block !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    width:100% !important;
+    height:auto !important;
+    max-height:none !important;
+    overflow:visible !important;
+  }
+  #tabList{
+    display:flex !important;
+    flex-direction:column !important;
+    width:100% !important;
+    height:auto !important;
+  }
+  #tabList .dynamic-rule,
+  #tabList .admin-only-rule{
+    display:flex !important;
+    visibility:visible !important;
+    opacity:1 !important;
+  }
+  #tabList .dynamic-rule[style*="display: none"],
+  #tabList .admin-only-rule[style*="display: none"]{
+    display:none !important;
+  }
+  .rule-link{
+    min-height:46px;
+    width:100% !important;
+    white-space:normal !important;
+  }
+  .rule-link > span:nth-child(2){
+    overflow-wrap:anywhere;
+    word-break:break-word;
+  }
+}
+
+
+/* ===== THƯ MỤC CHA / RULE CON ===== */
+.category-folder{
+  width:100%;
+  margin-bottom:4px;
+}
+.category-head{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  min-height:44px;
+  padding:10px 12px;
+  border:0;
+  border-left:3px solid transparent;
+  border-radius:0 3px 3px 0;
+  background:transparent;
+  color:rgba(243,234,211,.85);
+  text-align:left;
+  cursor:pointer;
+  font-size:14px;
+}
+.category-head:hover,
+.category-folder.active .category-head{
+  background:rgba(201,138,44,.12);
+  border-left-color:var(--accent);
+  color:var(--card);
+}
+.category-name{
+  flex:1;
+  min-width:0;
+  font-weight:600;
+}
+.category-children{
+  padding-left:16px;
+}
+.category-children .rule-link{
+  margin-bottom:1px;
+  font-size:13px;
+}
+.category-empty{
+  padding:7px 12px 8px 38px;
+  color:rgba(243,234,211,.25);
+  font-family:var(--mono);
+  font-size:10px;
+}
+.admin-form{
+  grid-template-columns:1fr 1.4fr 170px auto !important;
+}
+#ruleCategoryInput{
+  appearance:auto;
+}
+@media(max-width:780px){
+  .category-head{
+    min-height:48px;
+    padding:11px 10px;
+    font-size:14px;
+  }
+  .category-children{
+    padding-left:8px;
+  }
+  .category-children .rule-link{
+    min-height:44px;
+    padding:10px 9px;
+  }
+  .category-empty{
+    padding-left:36px;
+  }
+  .admin-form{
+    grid-template-columns:1fr !important;
+  }
+  #ruleCategoryInput{
+    height:44px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -833,6 +948,13 @@ html, body {
         <form id="adminRuleForm" class="admin-form">
           <input id="ruleNameInput" class="admin-input" type="text" placeholder="Tên Rule" required />
           <input id="ruleUrlInput" class="admin-input" type="url" placeholder="https://example.com/..." required />
+          <select id="ruleCategoryInput" class="admin-input" required>
+            <option value="phone">📱 Điện thoại</option>
+            <option value="tablet">▣ Tablet</option>
+            <option value="ce">◈ CE</option>
+            <option value="other">📦 SP Khác</option>
+            <option value="tips">💡 Mẹo vặt</option>
+          </select>
           <button id="saveRuleBtn" class="admin-btn" type="submit">Thêm Rule</button>
         </form>
         <div id="adminRuleList" class="admin-list"></div>
@@ -887,7 +1009,7 @@ const ADMIN_ACCOUNT = {
          với index.html (ví dụ thư mục "files/").
    - "type": nhãn hiển thị góc thẻ, ví dụ "PDF", "DOCX", "VIDEO", "LINK".
    ---------------------------------------------------------------------- */
-const CATEGORIES = [];
+const CATEGORIES = []; /* Danh mục cũ giữ trống; hệ thống mới dùng PARENT_CATEGORIES + Rule từ Google Sheet. */
 
 /* ======================================================================
    ⬇️ TỪ ĐÂY TRỞ XUỐNG LÀ LOGIC HOẠT ĐỘNG — KHÔNG CẦN CHỈNH
@@ -916,6 +1038,115 @@ function loadAdminRules(){
 function saveAdminRules(){
   try{ localStorage.setItem(RULES_STORAGE_KEY, JSON.stringify(adminRules)); }
   catch(e){ alert("Không thể lưu Rule trên trình duyệt này."); }
+}
+
+/* ===== ĐỒNG BỘ RULE GIỮA LAPTOP + ĐIỆN THOẠI ===== */
+function makeRuleId(name, url){
+  const str = String(name || "") + "|" + String(url || "");
+  let hash = 0;
+  for(let i=0;i<str.length;i++){
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return "r_" + Math.abs(hash) + "_" + str.length;
+}
+
+async function apiGetRules(){
+  const response = await fetch(
+    ACCESS_LOG_API_URL + "?action=getRules&ts=" + Date.now(),
+    {method:"GET", cache:"no-store"}
+  );
+  if(!response.ok) throw new Error("Không tải được Rule từ máy chủ.");
+  const data = await response.json();
+  if(!data.success || !Array.isArray(data.rules)){
+    throw new Error("Dữ liệu Rule từ máy chủ không hợp lệ.");
+  }
+  return data.rules;
+}
+
+function apiPostRule(payload){
+  return fetch(ACCESS_LOG_API_URL, {
+    method:"POST",
+    mode:"no-cors",
+    headers:{"Content-Type":"text/plain;charset=UTF-8"},
+    body:JSON.stringify(payload),
+    keepalive:true
+  }).catch(() => {});
+}
+
+async function syncRulesFromServer(){
+  try{
+    const serverRules = await apiGetRules();
+
+    adminRules = serverRules.map(rule => ({
+      id: rule.id || makeRuleId(rule.name, rule.url),
+      name: rule.name || "",
+      url: rule.url || "",
+      categoryId: rule.categoryId || "phone",
+      categoryName: rule.categoryName || "Điện thoại"
+    })).filter(rule => rule.name && rule.url);
+
+    saveAdminRules();
+    renderAdminRules();
+    renderRuleLinks();
+
+    const quickInput = document.getElementById("quickSearchInput");
+    if(quickInput){
+      renderQuickSearchResults(quickInput.value);
+      filterSidebarRules(quickInput.value);
+    }
+  }catch(e){
+    console.warn("Không đồng bộ được Rule:", e);
+    renderRuleLinks();
+  }
+}
+
+function syncLocalRulesToServer(){
+  if(!isAdmin(currentUser) || !adminRules.length) return;
+
+  adminRules = adminRules.map(rule => {
+    const category = PARENT_CATEGORIES.find(c => c.id === (rule.categoryId || "phone")) || PARENT_CATEGORIES[0];
+    return {
+      id: rule.id || makeRuleId(rule.name, rule.url),
+      name: rule.name,
+      url: rule.url,
+      categoryId: category.id,
+      categoryName: category.name
+    };
+  });
+
+  saveAdminRules();
+
+  adminRules.forEach(rule => {
+    apiPostRule({
+      action:"saveRule",
+      id:rule.id,
+      name:rule.name,
+      url:rule.url,
+      categoryId:rule.categoryId,
+      categoryName:rule.categoryName
+    });
+  });
+}
+
+function saveRuleToServer(rule){
+  const category = PARENT_CATEGORIES.find(c => c.id === (rule.categoryId || "phone")) || PARENT_CATEGORIES[0];
+  return apiPostRule({
+    action:"saveRule",
+    id:rule.id || makeRuleId(rule.name, rule.url),
+    name:rule.name,
+    url:rule.url,
+    categoryId:category.id,
+    categoryName:category.name
+  });
+}
+
+function deleteRuleFromServer(rule){
+  if(!rule) return;
+  return apiPostRule({
+    action:"deleteRule",
+    id:rule.id || makeRuleId(rule.name, rule.url)
+  });
 }
 
 function isAdmin(user){
@@ -1085,48 +1316,120 @@ function renderQuickSearchResults(query){
 function filterSidebarRules(query){
   const q = (query || "").trim().toLowerCase();
 
-  document.querySelectorAll("#tabList .dynamic-rule, #tabList .admin-only-rule").forEach(btn => {
-    const name = (btn.textContent || "").toLowerCase();
-    btn.style.display = (!q || name.includes(q)) ? "flex" : "none";
+  document.querySelectorAll("#tabList .category-folder").forEach(folder => {
+    let visible = false;
+
+    folder.querySelectorAll(".dynamic-rule").forEach(btn => {
+      const name = (btn.textContent || "").toLowerCase();
+      const match = !q || name.includes(q);
+      btn.style.display = match ? "flex" : "none";
+      if (match) visible = true;
+    });
+
+    const head = folder.querySelector(".category-head");
+    const children = folder.querySelector(".category-children");
+
+    if (q){
+      folder.style.display = visible ? "block" : "none";
+      if (visible && children) children.style.display = "block";
+    }else{
+      folder.style.display = "block";
+      if (children && head){
+        const id = head.dataset.categoryId;
+        children.style.display = "block";
+      }
+    }
   });
+
+  const adminOnly = document.querySelector("#tabList .admin-only-rule");
+  if (adminOnly) adminOnly.style.display = "flex";
 }
 
 function renderRuleLinks(){
   const list = document.getElementById("tabList");
   if (!list) return;
 
-  list.querySelectorAll(".dynamic-rule, .admin-only-rule").forEach(el => el.remove());
+  list.innerHTML = "";
 
-  /* Rule do Admin tạo: mọi user đều có thể thấy. */
-  adminRules.forEach(rule => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "rule-link dynamic-rule";
-    btn.title = rule.url;
+  PARENT_CATEGORIES.forEach(cat => {
+    const rules = adminRules.filter(rule => (rule.categoryId || "phone") === cat.id);
 
-    const ic = document.createElement("span");
-    ic.className = "ic";
-    ic.textContent = "🔗";
+    const folder = document.createElement("div");
+    folder.className = "category-folder" + (cat.id === activeCategoryId ? " active" : "");
 
-    const text = document.createElement("span");
-    text.textContent = rule.name;
+    const head = document.createElement("button");
+    head.type = "button";
+    head.className = "category-head";
+    head.dataset.categoryId = cat.id;
 
-    const badge = document.createElement("span");
-    badge.className = "admin-badge";
-    badge.textContent = "RULE";
+    const icon = document.createElement("span");
+    icon.className = "ic";
+    icon.textContent = cat.icon;
 
-    btn.appendChild(ic);
-    btn.appendChild(text);
-    btn.appendChild(badge);
+    const name = document.createElement("span");
+    name.className = "category-name";
+    name.textContent = cat.name;
 
-    btn.addEventListener("click", () => {
-      trackAccess("RULE_CLICK", rule.name, rule.url);
-      window.open(rule.url, "_blank", "noopener,noreferrer");
+    const count = document.createElement("span");
+    count.className = "ct";
+    count.textContent = rules.length;
+
+    head.appendChild(icon);
+    head.appendChild(name);
+    head.appendChild(count);
+
+    const children = document.createElement("div");
+    children.className = "category-children";
+    children.style.display = (cat.id === activeCategoryId) ? "block" : "none";
+
+    head.addEventListener("click", () => {
+      activeCategoryId = cat.id;
+      renderRuleLinks();
     });
-    list.appendChild(btn);
+
+    folder.appendChild(head);
+
+    rules.forEach(rule => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "rule-link dynamic-rule";
+      btn.title = rule.url;
+
+      const ic = document.createElement("span");
+      ic.className = "ic";
+      ic.textContent = "🔗";
+
+      const text = document.createElement("span");
+      text.textContent = rule.name;
+
+      const badge = document.createElement("span");
+      badge.className = "admin-badge";
+      badge.textContent = "RULE";
+
+      btn.appendChild(ic);
+      btn.appendChild(text);
+      btn.appendChild(badge);
+
+      btn.addEventListener("click", () => {
+        trackAccess("RULE_CLICK", rule.name, rule.url);
+        window.open(rule.url, "_blank", "noopener,noreferrer");
+      });
+
+      children.appendChild(btn);
+    });
+
+    if (!rules.length){
+      const empty = document.createElement("div");
+      empty.className = "category-empty";
+      empty.textContent = "Chưa có Rule";
+      children.appendChild(empty);
+    }
+
+    folder.appendChild(children);
+    list.appendChild(folder);
   });
 
-  /* Chỉ Admin mới được thấy Rule mở Google Sheet dữ liệu truy cập. */
+  /* Dữ liệu truy cập chỉ Admin */
   if (isAdmin(currentUser)){
     const btn = document.createElement("button");
     btn.type = "button";
@@ -1161,6 +1464,7 @@ function startEditRule(index){
   editingRuleIndex = index;
   document.getElementById("ruleNameInput").value = rule.name;
   document.getElementById("ruleUrlInput").value = rule.url;
+  document.getElementById("ruleCategoryInput").value = rule.categoryId || "phone";
   document.getElementById("saveRuleBtn").textContent = "Lưu thay đổi";
   document.getElementById("ruleNameInput").focus();
 }
@@ -1168,8 +1472,10 @@ function startEditRule(index){
 function deleteRule(index){
   const rule = adminRules[index];
   if (!rule || !confirm('Xoá Rule "' + rule.name + '"?')) return;
+  const deletedRule = adminRules[index];
   adminRules.splice(index, 1);
   saveAdminRules();
+  deleteRuleFromServer(deletedRule);
   renderAdminRules();
   renderRuleLinks();
 
@@ -1185,13 +1491,22 @@ function openAdminPanel(){
   document.getElementById("adminPanel").style.display = "block";
   document.getElementById("adminToggleBtn").style.display = "inline-block";
   renderAdminRules();
+  syncRulesFromServer();
 }
 
 function closeAdminPanel(){
   document.getElementById("adminPanel").style.display = "none";
 }
 
-let activeCategoryId = CATEGORIES.length ? CATEGORIES[0].id : null;
+const PARENT_CATEGORIES = [
+  {id:"phone", name:"Điện thoại", icon:"📱"},
+  {id:"tablet", name:"Tablet", icon:"▣"},
+  {id:"ce", name:"CE", icon:"◈"},
+  {id:"other", name:"SP Khác", icon:"📦"},
+  {id:"tips", name:"Mẹo vặt", icon:"💡"}
+];
+
+let activeCategoryId = PARENT_CATEGORIES[0].id;
 let currentUser = null; /* lưu tạm trong bộ nhớ trang thay vì sessionStorage,
                             vì một số trình duyệt (mở file trực tiếp qua file://,
                             hoặc chế độ duyệt web riêng tư) chặn sessionStorage
@@ -1222,6 +1537,15 @@ function showMain(user){
   renderTabs();
   renderRuleLinks();
   renderCategory(activeCategoryId);
+
+  /* Admin đồng bộ Rule đang có trên máy lên server trước.
+     Sau đó tất cả thiết bị tải danh sách Rule chung. */
+  if (isAdmin(user)){
+    syncLocalRulesToServer();
+    setTimeout(syncRulesFromServer, 800);
+  }else{
+    syncRulesFromServer();
+  }
 }
 
 function showLogin(){
@@ -1349,8 +1673,11 @@ document.getElementById("adminRuleForm").addEventListener("submit", function(e){
 
   const nameInput = document.getElementById("ruleNameInput");
   const urlInput = document.getElementById("ruleUrlInput");
+  const categoryInput = document.getElementById("ruleCategoryInput");
+
   const name = nameInput.value.trim();
   let url = urlInput.value.trim();
+  const category = PARENT_CATEGORIES.find(c => c.id === categoryInput.value) || PARENT_CATEGORIES[0];
 
   if (!name || !url) return;
 
@@ -1358,92 +1685,68 @@ document.getElementById("adminRuleForm").addEventListener("submit", function(e){
     url = "https://" + url;
   }
 
+  let savedRule;
+
   if (editingRuleIndex >= 0 && adminRules[editingRuleIndex]){
-    adminRules[editingRuleIndex] = {name, url};
+    const oldRule = adminRules[editingRuleIndex];
+
+    savedRule = {
+      id: oldRule.id || makeRuleId(oldRule.name, oldRule.url),
+      name,
+      url,
+      categoryId: category.id,
+      categoryName: category.name
+    };
+
+    adminRules[editingRuleIndex] = savedRule;
     editingRuleIndex = -1;
     document.getElementById("saveRuleBtn").textContent = "Thêm Rule";
   }else{
-    adminRules.push({name, url});
+    savedRule = {
+      id: makeRuleId(name, url),
+      name,
+      url,
+      categoryId: category.id,
+      categoryName: category.name
+    };
+
+    adminRules.push(savedRule);
   }
 
   saveAdminRules();
+  saveRuleToServer(savedRule);
+
   renderAdminRules();
   renderRuleLinks();
 
   nameInput.value = "";
   urlInput.value = "";
+  categoryInput.value = "phone";
+
+  const quickInput = document.getElementById("quickSearchInput");
+  if (quickInput){
+    renderQuickSearchResults(quickInput.value);
+    filterSidebarRules(quickInput.value);
+  }
+
   nameInput.focus();
 });
 
-/* ---- render cột danh mục ---- */
+/* ---- render cột danh mục cha + Rule con ---- */
 function renderTabs(){
-  const list = document.getElementById("tabList");
-  list.innerHTML = "";
-  CATEGORIES.forEach(cat => {
-    const btn = document.createElement("button");
-    btn.className = "tab-btn" + (cat.id === activeCategoryId ? " active" : "");
-    btn.innerHTML =
-      '<span class="ic">' + cat.icon + '</span>' +
-      '<span>' + escapeHtml(cat.name) + '</span>' +
-      '<span class="ct">' + cat.items.length + '</span>';
-    btn.addEventListener("click", () => {
-      activeCategoryId = cat.id;
-      renderTabs();
-      renderCategory(cat.id);
-      document.getElementById("searchInput").value = "";
-    });
-    list.appendChild(btn);
-  });
+  renderRuleLinks();
 }
 
-/* ---- render nội dung danh mục đang chọn ---- */
 function renderCategory(catId){
-  const cat = CATEGORIES.find(c => c.id === catId);
-  const grid = document.getElementById("itemGrid");
-
-  if (!cat){
-    document.getElementById("catTitle").textContent = "";
-    document.getElementById("catDesc").textContent = "";
-    document.getElementById("catEyebrow").textContent = "";
-    grid.innerHTML = "";
-    return;
-  }
-
-  document.getElementById("catEyebrow").textContent = "Danh mục · " + cat.items.length + " tài liệu";
-  document.getElementById("catTitle").textContent = cat.icon + "  " + cat.name;
-  document.getElementById("catDesc").textContent = cat.description || "";
-
-  renderItems(cat.items);
+  activeCategoryId = catId || activeCategoryId || PARENT_CATEGORIES[0].id;
+  renderRuleLinks();
 }
 
 function renderItems(items){
+  /* Tương thích với giao diện cũ; Rule hiện được mở trực tiếp từ danh mục cha. */
   const grid = document.getElementById("itemGrid");
-  grid.innerHTML = "";
-
-  if (!items.length){
-    grid.innerHTML = '<div class="empty-state">Chưa có tài liệu nào trong danh mục này.</div>';
-    return;
-  }
-
-  items.forEach(item => {
-    const a = document.createElement("a");
-    a.className = "item-card";
-    a.href = item.file;
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    a.innerHTML =
-      '<div class="item-top">' +
-        '<div class="item-title">' + escapeHtml(item.title) + '</div>' +
-        '<div class="item-type">' + escapeHtml(item.type || "FILE") + '</div>' +
-      '</div>' +
-      '<div class="item-desc">' + escapeHtml(item.desc || "") + '</div>' +
-      '<div class="item-open">Mở tài liệu →</div>';
-    grid.appendChild(a);
-  });
+  if (grid) grid.innerHTML = "";
 }
-
-/* ---- tìm kiếm trong danh mục hiện tại ---- */
-
 
 function escapeHtml(str){
   const d = document.createElement("div");
