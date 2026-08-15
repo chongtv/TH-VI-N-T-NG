@@ -1051,17 +1051,61 @@ function makeRuleId(name, url){
   return "r_" + Math.abs(hash) + "_" + str.length;
 }
 
-async function apiGetRules(){
-  const response = await fetch(
-    ACCESS_LOG_API_URL + "?action=getRules&ts=" + Date.now(),
-    {method:"GET", cache:"no-store"}
-  );
-  if(!response.ok) throw new Error("Không tải được Rule từ máy chủ.");
-  const data = await response.json();
-  if(!data.success || !Array.isArray(data.rules)){
-    throw new Error("Dữ liệu Rule từ máy chủ không hợp lệ.");
-  }
-  return data.rules;
+function apiGetRules(){
+  /*
+    Google Apps Script thường redirect sang googleusercontent.
+    Trên điện thoại, fetch() đọc JSON cross-origin có thể bị CORS chặn.
+    Dùng JSONP cho thao tác ĐỌC Rule để chạy ổn định trên GitHub Pages.
+  */
+  return new Promise((resolve, reject) => {
+    const callbackName = "__rulesCallback_" + Date.now() + "_" +
+      Math.random().toString(36).slice(2);
+
+    const script = document.createElement("script");
+    let finished = false;
+
+    const cleanup = () => {
+      try { delete window[callbackName]; } catch(e) { window[callbackName] = undefined; }
+      if (script.parentNode) script.parentNode.removeChild(script);
+    };
+
+    const timer = setTimeout(() => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      reject(new Error("Không tải được danh sách Rule từ máy chủ."));
+    }, 15000);
+
+    window[callbackName] = (data) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      cleanup();
+
+      if (!data || !data.success || !Array.isArray(data.rules)) {
+        reject(new Error("Dữ liệu Rule từ máy chủ không hợp lệ."));
+        return;
+      }
+
+      resolve(data.rules);
+    };
+
+    script.onerror = () => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      cleanup();
+      reject(new Error("Không kết nối được Google Apps Script."));
+    };
+
+    script.src =
+      ACCESS_LOG_API_URL +
+      "?action=getRules&callback=" +
+      encodeURIComponent(callbackName) +
+      "&ts=" + Date.now();
+
+    document.head.appendChild(script);
+  });
 }
 
 function apiPostRule(payload){
@@ -1078,7 +1122,7 @@ async function syncRulesFromServer(){
   try{
     const serverRules = await apiGetRules();
 
-    adminRules = serverRules.map(rule => ({
+    const normalizedServerRules = serverRules.map(rule => ({
       id: rule.id || makeRuleId(rule.name, rule.url),
       name: rule.name || "",
       url: rule.url || "",
@@ -1086,7 +1130,15 @@ async function syncRulesFromServer(){
       categoryName: rule.categoryName || "Điện thoại"
     })).filter(rule => rule.name && rule.url);
 
-    saveAdminRules();
+    /*
+      Nếu server thật sự có Rule thì dùng danh sách server.
+      Nếu server tạm thời trả rỗng, không xóa Rule đang có ở Admin.
+    */
+    if (normalizedServerRules.length || !adminRules.length){
+      adminRules = normalizedServerRules;
+      saveAdminRules();
+    }
+
     renderAdminRules();
     renderRuleLinks();
 
