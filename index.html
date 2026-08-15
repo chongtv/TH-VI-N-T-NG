@@ -538,6 +538,235 @@ body::before{
   }
 }
 
+
+/* ===================== RESPONSIVE FIX v2 ===================== */
+html, body {
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+#mainScreen {
+  width: 100%;
+  min-width: 0;
+}
+
+.topbar {
+  width: 100%;
+  min-width: 0;
+}
+
+.layout {
+  width: 100%;
+  min-width: 0;
+}
+
+.drawer,
+.content {
+  min-width: 0;
+}
+
+@media (max-width: 780px) {
+  #mainScreen {
+    overflow-x: hidden;
+  }
+
+  .topbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 12px;
+  }
+
+  .brand {
+    min-width: 0;
+    flex: 1 1 100%;
+    margin-bottom: 8px;
+  }
+
+  .brand-name {
+    min-width: 0;
+    font-size: 16px;
+    line-height: 1.2;
+  }
+
+  .who {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+
+  #whoName {
+    flex: 1 1 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .layout {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+  }
+
+  .drawer {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    padding: 16px 12px 10px !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid rgba(243,234,211,0.12);
+    overflow: visible !important;
+  }
+
+  .drawer-label {
+    display: block !important;
+    margin: 0 0 8px 2px !important;
+  }
+
+  #tabList {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+
+  .tab-btn,
+  .rule-link {
+    display: flex !important;
+    width: 100% !important;
+    min-width: 0;
+    min-height: 44px;
+  }
+
+  .tab-btn span:not(.ic),
+  .rule-link span:not(.ic) {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .content {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    padding: 14px 12px 40px !important;
+  }
+
+  /* Không để trạng thái "chưa có danh mục" che/mất khu vực nội dung */
+  .content-header {
+    display: none !important;
+  }
+
+  .quick-search-panel {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 0 14px !important;
+  }
+
+  .quick-search-row {
+    display: flex !important;
+    width: 100% !important;
+  }
+
+  #quickSearchInput {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 44px;
+    font-size: 14px;
+  }
+
+  .quick-results {
+    width: 100% !important;
+    max-height: 55vh;
+    overflow-y: auto;
+  }
+
+  .card-grid {
+    display: grid !important;
+    width: 100% !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .item-card {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  #adminPanel {
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden;
+  }
+
+  .admin-form,
+  .admin-rule {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+  }
+
+  .admin-input {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .admin-rule-url {
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .admin-head {
+    align-items: flex-start;
+  }
+
+  .footnote {
+    width: 100%;
+    padding: 0 12px 24px;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* Điện thoại rất nhỏ */
+@media (max-width: 420px) {
+  .catalog-card {
+    max-width: 100%;
+    padding: 36px 20px 28px;
+  }
+
+  .catalog-title {
+    font-size: 23px;
+  }
+
+  .topbar {
+    padding: 10px;
+  }
+
+  .brand-name {
+    font-size: 15px;
+  }
+
+  .content {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .drawer {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  #adminToggleBtn,
+  #logoutBtn {
+    font-size: 10px !important;
+    padding: 6px 8px !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1173,8 +1402,9 @@ function renderCategory(catId){
   const grid = document.getElementById("itemGrid");
 
   if (!cat){
-    document.getElementById("catTitle").textContent = "Chưa có danh mục nào";
-    document.getElementById("catDesc").textContent = "Dùng ô Tìm kiếm nhanh để tìm Rule theo tên hoặc từ khóa.";
+    document.getElementById("catTitle").textContent = "";
+    document.getElementById("catDesc").textContent = "";
+    document.getElementById("catEyebrow").textContent = "";
     grid.innerHTML = "";
     return;
   }
