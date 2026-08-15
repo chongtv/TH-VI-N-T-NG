@@ -969,6 +969,18 @@ html, body {
   }
 }
 
+
+.deploy-sync-status{
+  margin-top:8px;
+  font-family:var(--mono);
+  font-size:9px;
+  color:rgba(243,234,211,.42);
+}
+.deploy-note-actions .admin-btn{
+  min-width:auto;
+  padding:6px 10px;
+}
+
 </style>
 </head>
 <body>
@@ -1055,6 +1067,7 @@ html, body {
               placeholder="Ví dụ: Triển khai chương trình mới từ ngày 18/08..." rows="3" required></textarea>
             <button class="admin-btn" type="submit">Thêm thông báo</button>
           </form>
+          <div id="deploySyncStatus" class="deploy-sync-status">Đang tải thông báo...</div>
           <div id="deployNotesAdminList" class="deploy-notes-admin-list"></div>
         </section>
       </section>
@@ -1199,14 +1212,36 @@ function apiGetDeployNotes(){
 }
 
 async function syncDeployNotesFromServer(){
+  const status = document.getElementById("deploySyncStatus");
+
   try{
-    deployNotes = await apiGetDeployNotes();
+    if (status) status.textContent = "Đang tải thông báo từ Google Sheet...";
+
+    const serverNotes = await apiGetDeployNotes();
+
+    if (Array.isArray(serverNotes)){
+      deployNotes = serverNotes;
+    }
+
     renderDeployNotesAdmin();
     renderRuleLinks();
     updateDeployAdminPanel();
     renderDeployNotices();
+
+    if (status){
+      status.textContent =
+        "Đã đồng bộ " + deployNotes.length + " thông báo.";
+    }
   }catch(e){
     console.warn("Không tải được thông báo Triển khai:", e);
+
+    if (status){
+      status.textContent =
+        "Không kết nối được Google Sheet. Dữ liệu đã lưu trên máy vẫn được giữ.";
+    }
+
+    renderDeployNotesAdmin();
+    renderRuleLinks();
     renderDeployNotices();
   }
 }
@@ -1229,9 +1264,19 @@ function renderDeployNotices(){
 
   box.innerHTML = "";
 
-  /* Chỉ hiện nội dung thông báo khi User/Admin đang mở thư mục Triển khai. */
-  if (activeCategoryId !== "deploy" || !deployNotes.length){
+  /* User chỉ cần mở thư mục Triển khai là thấy toàn bộ thông báo. */
+  if (activeCategoryId !== "deploy"){
     box.style.display = "none";
+    return;
+  }
+
+  if (!deployNotes.length){
+    box.style.display = "block";
+    box.innerHTML =
+      '<div class="deploy-notice">' +
+      '<div class="deploy-notice-label">📢 TRIỂN KHAI</div>' +
+      '<div class="deploy-notice-text">Chưa có thông báo triển khai.</div>' +
+      '</div>';
     return;
   }
 
@@ -1278,6 +1323,22 @@ function renderDeployNotesAdmin(){
     const actions = document.createElement("div");
     actions.className = "deploy-note-actions";
 
+    const edit = document.createElement("button");
+    edit.type = "button";
+    edit.className = "admin-btn secondary";
+    edit.textContent = "Sửa";
+
+    edit.addEventListener("click", () => {
+      const input = document.getElementById("deployNoteInput");
+      if (input){
+        input.value = note.content;
+        input.dataset.editingId = note.id;
+        input.focus();
+      }
+      const btn = document.querySelector("#deployNoteForm button[type=submit]");
+      if (btn) btn.textContent = "Lưu thông báo";
+    });
+
     const del = document.createElement("button");
     del.type = "button";
     del.className = "delete-rule";
@@ -1294,10 +1355,11 @@ function renderDeployNotesAdmin(){
       if (ok){
         await syncDeployNotesFromServer();
       }else{
-        alert("Không thể xóa thông báo. Vui lòng thử lại.");
+        alert("Không thể xóa thông báo. Hãy kiểm tra Apps Script đã Deploy bản mới.");
       }
     });
 
+    actions.appendChild(edit);
     actions.appendChild(del);
     card.appendChild(text);
     card.appendChild(actions);
@@ -1309,10 +1371,12 @@ function updateDeployAdminPanel(){
   const panel = document.getElementById("deployAdminPanel");
   if (!panel) return;
 
-  panel.style.display =
-    (isAdmin(currentUser) && activeCategoryId === "deploy")
-      ? "block"
-      : "none";
+  /*
+    Admin đã mở khu vực Quản trị thì luôn được thấy phần
+    Triển khai để thêm / sửa / xoá thông báo, không phụ thuộc
+    đang chọn thư mục nào ở cột Danh mục.
+  */
+  panel.style.display = isAdmin(currentUser) ? "block" : "none";
 }
 
 function apiGetRules(){
@@ -1374,11 +1438,11 @@ function apiGetRules(){
 
 function apiPostRule(payload){
   /*
-    Ghi Rule bằng GET + JSONP để không bị CORS/redirect chặn trên điện thoại.
-    Apps Script doGet() sẽ lưu Rule vào sheet Rules.
+    Ghi dữ liệu bằng GET + JSONP.
+    Có timestamp để Google/browser không dùng cache cũ.
   */
   return new Promise((resolve) => {
-    const callbackName = "__ruleWrite_" + Date.now() + "_" +
+    const callbackName = "__apiWrite_" + Date.now() + "_" +
       Math.random().toString(36).slice(2);
 
     const script = document.createElement("script");
@@ -1397,7 +1461,7 @@ function apiPostRule(payload){
       resolve(ok);
     };
 
-    const timer = setTimeout(() => done(false), 15000);
+    const timer = setTimeout(() => done(false), 20000);
 
     window[callbackName] = (data) => {
       done(!!(data && data.success));
@@ -1408,6 +1472,7 @@ function apiPostRule(payload){
     const params = new URLSearchParams();
     params.set("action", payload.action || "");
     params.set("callback", callbackName);
+    params.set("_ts", String(Date.now()));
 
     Object.keys(payload).forEach(key => {
       if (key === "action") return;
@@ -2088,11 +2153,36 @@ document.getElementById("deployNoteForm").addEventListener("submit", async funct
 
   if (!content) return;
 
+  const editingId = input.dataset.editingId || "";
   const note = {
-    id: "deploy_" + Date.now() + "_" +
-      Math.random().toString(36).slice(2),
+    id: editingId || (
+      "deploy_" + Date.now() + "_" +
+      Math.random().toString(36).slice(2)
+    ),
     content: content
   };
+
+  /*
+    Hiển thị ngay trong danh sách Admin trước khi chờ server.
+    Sau đó mới đồng bộ lên Google Sheet.
+  */
+  const existingIndex = deployNotes.findIndex(n => n.id === note.id);
+
+  if (existingIndex >= 0){
+    deployNotes[existingIndex] = note;
+  }else{
+    deployNotes.unshift(note);
+  }
+
+  renderDeployNotesAdmin();
+  renderDeployNotices();
+  renderRuleLinks();
+
+  input.value = "";
+  delete input.dataset.editingId;
+
+  const btn = document.querySelector("#deployNoteForm button[type=submit]");
+  if (btn) btn.textContent = "Thêm thông báo";
 
   const ok = await apiPostRule({
     action:"saveDeployNote",
@@ -2101,11 +2191,13 @@ document.getElementById("deployNoteForm").addEventListener("submit", async funct
   });
 
   if (!ok){
-    alert("Không thể lưu thông báo. Vui lòng thử lại.");
+    alert(
+      "Thông báo đã hiện trên Admin nhưng chưa đồng bộ Google Sheet. " +
+      "Hãy Deploy Apps Script bản mới rồi thử lại."
+    );
     return;
   }
 
-  input.value = "";
   await syncDeployNotesFromServer();
 });
 
