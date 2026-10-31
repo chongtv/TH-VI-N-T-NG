@@ -150,9 +150,6 @@ details.h summary{cursor:pointer; padding:12px 0; font-weight:600; display:flex;
 }
 </style>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
 <div class="wrap">
   <header class="hdr" id="hdr"></header>
   <main id="main"></main>
@@ -246,7 +243,7 @@ function renderHeader(){
 
 function computeView(){
   if (!S.booted) return {key:'load', build:loadingView};
-  if (!S.db) return {key:'nodb', build:() => msgCard('Không kết nối được dữ liệu', 'Kiểm tra lại cấu hình Firebase SDK.')};
+  if (!S.db) return {key:'nodb', build:() => msgCard('Không kết nối được dữ liệu', 'Hãy mở lại app bằng tài khoản đã được chia sẻ quyền truy cập.')};
   if (!(S.loaded.main && S.loaded.cfg && S.loaded.players)) return {key:'load', build:loadingView};
   if (S.isAdmin && S.mode === 'admin') return {key:'admin:' + S.tab, stat:(S.tab === 'q' || S.tab === 'p'), build:adminView};
   return playerView();
@@ -300,30 +297,7 @@ function joinView(){
     el('button', {class:'btn primary block', type:'submit', text:'Vào phòng chờ'}));
   return el('div', {class:'col'},
     el('div', {class:'hero'}, el('h2', {text:'Tham gia lượt chơi'}), el('p', {class:'muted', text:count + '/' + MAX + ' người đã vào phòng'})),
-    form,
-    el('div', {style:'text-align:center; margin-top:20px'},
-      el('button', {
-        class:'btn sm', 
-        type:'button', 
-        style:'background:transparent; border:none; color:var(--muted); text-decoration:underline', 
-        text:'Vào trang Quản trị (Admin)', 
-        onclick:() => { 
-          if (sessionStorage.getItem('admin_auth') === '1') {
-            S.isAdmin = true; S.mode = 'admin'; location.hash = 'admin'; render();
-          } else {
-            const pass = prompt('Nhập mật khẩu Quản trị viên:');
-            if (pass === 'Xiaomi@123') {
-              sessionStorage.setItem('admin_auth', '1');
-              S.isAdmin = true; S.mode = 'admin'; location.hash = 'admin'; render();
-              toast('Đăng nhập Quản trị thành công!');
-            } else if (pass !== null) {
-              toast('Mật khẩu không chính xác!');
-            }
-          }
-        }
-      })
-    )
-  );
+    form);
 }
 
 function lobbyView(me){
@@ -349,35 +323,20 @@ function questionView(me, idx){
     el('h2', {class:'qtext', text:q.text}),
     el('div', {class:'opts', id:'opts'}, btns));
 }
-
 function startTimer(){
   const q = S.curQ; if (!q) return;
-  const duration = q.time * 1000;
-  const fill = $('#tfill');
-
-  if (fill) {
-    fill.style.transition = `transform ${q.time}s linear, background-color 0.3s`;
-    requestAnimationFrame(() => {
-      fill.style.transform = 'scaleX(0)';
-    });
-  }
-
   S.tick = setInterval(() => {
-    const left = duration - (Date.now() - S.qStart);
-    const sec = $('#tsec');
-    
+    const left = q.time * 1000 - (Date.now() - S.qStart);
+    const fill = $('#tfill'), sec = $('#tsec');
+    if (fill) { fill.style.transform = 'scaleX(' + clamp(left / (q.time * 1000), 0, 1) + ')'; fill.classList.toggle('low', left < 5000); }
     if (sec) sec.textContent = Math.max(0, Math.ceil(left / 1000)) + 's';
-    if (fill && left <= 5000) fill.classList.add('low');
-
     if (left <= 0 && !S.qLocked){
-      S.qLocked = true; 
-      clearInterval(S.tick);
+      S.qLocked = true; clearInterval(S.tick);
       document.querySelectorAll('#opts .opt').forEach(b => b.disabled = true);
-      submitAnswer({a:-1, c:false, ms:duration});
+      submitAnswer({a:-1, c:false, ms:q.time * 1000});
     }
-  }, 1000);
+  }, 100);
 }
-
 function choose(q, i, btn){
   if (S.qLocked) return;
   S.qLocked = true; clearInterval(S.tick);
@@ -506,10 +465,9 @@ function controlTab(){
           el('button', {class:'btn', type:'button', text:'Hủy', onclick:() => { S.resetArmed = false; render(); }}))));
     } else actions.push(el('button', {class:'btn block', type:'button', text:'Reset và mở lượt mới', onclick:() => { S.resetArmed = true; render(); }}));
   }
-
-  const hintNode = st === 'lobby'
-    ? (!totalQ() ? el('span', {style:'color:var(--bad); font-weight:600'}, '⚠️ CHƯA CÓ CÂU HỎI: Đại ca phải sang tab "Câu hỏi" để soạn và bấm LƯU LẠI trước khi bắt đầu!') : !vp.length ? 'Chờ người chơi quét mã QR và nhập tên.' : 'Sẵn sàng. Bấm bắt đầu khi mọi người đã vào.')
-    : (pick ? 'Mọi người đã xong. Người chơi đang chọn quà theo thứ hạng.' : vp.filter(isDone).length + '/' + vp.length + ' người đã nộp bài.');
+  const hint = st === 'lobby'
+    ? (!totalQ() ? 'Chưa có câu hỏi: thêm ở tab Câu hỏi.' : !vp.length ? 'Chờ người chơi quét mã QR và nhập tên.' : 'Sẵn sàng. Bấm bắt đầu khi mọi người đã vào.')
+    : pick ? 'Mọi người đã xong. Người chơi đang chọn quà theo thứ hạng.' : vp.filter(isDone).length + '/' + vp.length + ' người đã nộp bài.';
 
   const urlInput = el('input', {type:'text', id:'shareurl', value:S.urlDraft != null ? S.urlDraft : url, 'aria-label':'Đường link app', oninput:e => { S.urlDraft = e.target.value; }});
   const left = el('div', {class:'wrap', style:'gap:16px'},
@@ -525,7 +483,7 @@ function controlTab(){
       el('p', {class:'small muted', text:'Chia sẻ app ở quyền Người đóng góp để người chơi ghi được điểm.'})),
     el('section', {class:'panel'},
       el('div', {class:'qmeta'}, el('span', {text:'Lượt ' + S.main.round}), el('span', {text:vp.length + '/' + MAX + ' người'})),
-      el('p', {class:'muted'}, hintNode), actions)); 
+      el('p', {class:'muted', text:hint}), actions));
   const right = el('section', {class:'panel'},
     el('h3', {text:'Bảng xếp hạng lượt ' + S.main.round}),
     pick && turnInfo().turn ? el('div', {class:'note', text:'Đang chờ ' + turnInfo().turn.name + ' chọn quà. Nếu bạn ấy vắng mặt, bấm Bỏ qua.'}) : null,
@@ -561,9 +519,8 @@ async function resetRound(){
   } catch(e){ toast('Reset chưa xong, kiểm tra kết nối rồi thử lại.'); }
   finally { S.busy = false; render(); }
 }
-
 async function saveCfg(partial){
-  await S.db.doc('config/main').set({...S.cfg, ...partial}, {merge: true});
+  await S.db.doc('config/main').set({...S.cfg, ...partial});
 }
 
 /* ---- editors ---- */
@@ -662,27 +619,11 @@ function render(){
   const v = computeView();
   const main = $('#main');
   const same = v.key === S.lastKey;
-  
   if (same && v.stat && !(S.force && v.key.indexOf('admin:') === 0)) return;
   const a = document.activeElement;
   if (same && !S.force && a && a !== document.body && a.matches && a.matches('input,textarea') && main.contains(a)){ S.pending = true; return; }
-  
   S.force = false; S.pending = false; S.lastKey = v.key;
   clearInterval(S.tick);
-
-  if (same && !v.stat && main.querySelector('.lb')) {
-      const newDom = v.build();
-      const oldTable = main.querySelector('.lb');
-      const newTable = newDom.querySelector('.lb');
-      if (oldTable && newTable) {
-          oldTable.replaceWith(newTable);
-          const oldMeta = main.querySelector('.qmeta');
-          const newMeta = newDom.querySelector('.qmeta');
-          if (oldMeta && newMeta) oldMeta.replaceWith(newMeta);
-          return;
-      }
-  }
-
   main.replaceChildren(v.build());
   if (v.after) v.after();
 }
@@ -693,7 +634,7 @@ function checkOverflow(){
   const mine = S.players.some(p => p.uid === S.uid && p.round === S.main.round);
   if (mine && !validPlayers().some(p => p.uid === S.uid)){
     S.full = true;
-    if(S.db && S.uid) S.db.doc('players/' + S.uid).delete().catch(() => {});
+    S.db.doc('players/' + S.uid).delete().catch(() => {});
   }
 }
 
@@ -701,64 +642,22 @@ function checkOverflow(){
 (async function boot(){
   render();
   setTimeout(() => { if (!(S.loaded.main && S.loaded.cfg && S.loaded.players)){ S.slow = true; schedule(); } }, 10000);
-
-  const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID"
-  };
-
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
-  S.db = firebase.firestore();
+  let db = null, user = null;
+  try { db = await window.claude.use('db'); user = await window.claude.use('user'); } catch(e){}
   S.booted = true;
-
-  S.uid = store('quiz_uid');
-  if (!S.uid) {
-    S.uid = 'user_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
-    store('quiz_uid', S.uid);
-  }
-  
-  if (location.hash === '#admin') {
-    if (sessionStorage.getItem('admin_auth') === '1') {
-      S.isAdmin = true;
-      S.mode = 'admin';
-    } else {
-      location.hash = ''; 
-    }
-  }
-
-  const onErr = e => { S.err = e && e.code; toast('Mất kết nối dữ liệu. Nhớ mở Rule Firebase nhé đại ca.'); };
-
-  // XỬ LÝ LỖI KHÔNG TẢI ĐƯỢC NGƯỜI CHƠI LÚC MỚI VÀO
-  let playerUnsub = null;
-  let currentListenRound = null;
-  function listenPlayers() {
-    if (currentListenRound === S.main.round) return; 
-    currentListenRound = S.main.round;
-    
-    if (playerUnsub) playerUnsub();
-    playerUnsub = S.db.collection('players').where('round', '==', S.main.round).onSnapshot(snap => {
-      S.players = snap.docs.map(d => { const x = d.data(); return Object.assign({round:0, name:'', joinedAt:0, answers:[], correct:0, timeMs:0, finished:false, prizeId:'', skipped:false}, x, {uid:d.id}); });
-      S.loaded.players = true; checkOverflow(); schedule();
-    }, onErr);
-  }
-
-  S.db.doc('state/main').onSnapshot(s => {
-    const prev = S.main ? S.main.round : null;
+  if (!db){ render(); return; }
+  S.db = db;
+  try { S.uid = user ? await user.id() : null; S.isAdmin = user ? await user.canEdit() : false; } catch(e){}
+  const onErr = e => { S.err = e && e.code; toast('Mất kết nối dữ liệu. Tải lại trang nếu không tự phục hồi.'); };
+  db.doc('state/main').onSnapshot(s => {
+    const prev = S.main.round;
     S.main = Object.assign({round:1, status:'lobby'}, s.exists ? s.data() : {});
-    if (prev !== S.main.round){ 
-      S.full = false; 
-      S.resetArmed = false; 
-    }
-    listenPlayers(); // Gọi luôn ở đây để đảm bảo load người chơi ngay lần đầu tiên
+    if (prev !== S.main.round){ S.full = false; S.resetArmed = false; }
     S.loaded.main = true; checkOverflow();
     if (S.lastKey && S.lastKey.indexOf('admin:') === 0) S.force = true;
     schedule();
   }, onErr);
-
-  S.db.doc('config/main').onSnapshot(s => {
+  db.doc('config/main').onSnapshot(s => {
     S.cfg = Object.assign({questions:[], prizes:[]}, s.exists ? s.data() : {});
     if (!S.dirtyQ) S.draftQ = cloneQs();
     if (!S.dirtyP) S.draftP = cloneZs();
@@ -766,9 +665,12 @@ function checkOverflow(){
     if (S.lastKey && S.lastKey.indexOf('admin:') === 0 && !S.dirtyQ && !S.dirtyP) S.force = true;
     schedule();
   }, onErr);
-
+  db.collection('players').onSnapshot(snap => {
+    S.players = snap.docs.map(d => { const x = d.data(); return Object.assign({round:0, name:'', joinedAt:0, answers:[], correct:0, timeMs:0, finished:false, prizeId:'', skipped:false}, x, {uid:d.id}); });
+    S.loaded.players = true; checkOverflow(); schedule();
+  }, onErr);
   if (S.isAdmin){
-    S.db.collection('history').orderBy('round', 'desc').limit(50).onSnapshot(snap => {
+    db.collection('history').orderBy('round', 'desc').limit(50).onSnapshot(snap => {
       S.history = snap.docs.map(d => d.data()); schedule();
     }, onErr);
   }
