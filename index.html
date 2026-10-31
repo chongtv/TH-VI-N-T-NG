@@ -301,7 +301,6 @@ function joinView(){
   return el('div', {class:'col'},
     el('div', {class:'hero'}, el('h2', {text:'Tham gia lượt chơi'}), el('p', {class:'muted', text:count + '/' + MAX + ' người đã vào phòng'})),
     form,
-    // THÊM NÚT VÀ BẢO MẬT BẰNG MẬT KHẨU
     el('div', {style:'text-align:center; margin-top:20px'},
       el('button', {
         class:'btn sm', 
@@ -508,7 +507,6 @@ function controlTab(){
     } else actions.push(el('button', {class:'btn block', type:'button', text:'Reset và mở lượt mới', onclick:() => { S.resetArmed = true; render(); }}));
   }
 
-  // CẢNH BÁO NẾU CHƯA CÓ CÂU HỎI
   const hintNode = st === 'lobby'
     ? (!totalQ() ? el('span', {style:'color:var(--bad); font-weight:600'}, '⚠️ CHƯA CÓ CÂU HỎI: Đại ca phải sang tab "Câu hỏi" để soạn và bấm LƯU LẠI trước khi bắt đầu!') : !vp.length ? 'Chờ người chơi quét mã QR và nhập tên.' : 'Sẵn sàng. Bấm bắt đầu khi mọi người đã vào.')
     : (pick ? 'Mọi người đã xong. Người chơi đang chọn quà theo thứ hạng.' : vp.filter(isDone).length + '/' + vp.length + ' người đã nộp bài.');
@@ -527,7 +525,7 @@ function controlTab(){
       el('p', {class:'small muted', text:'Chia sẻ app ở quyền Người đóng góp để người chơi ghi được điểm.'})),
     el('section', {class:'panel'},
       el('div', {class:'qmeta'}, el('span', {text:'Lượt ' + S.main.round}), el('span', {text:vp.length + '/' + MAX + ' người'})),
-      el('p', {class:'muted'}, hintNode), actions)); // SỬ DỤNG HINT NODE Ở ĐÂY
+      el('p', {class:'muted'}, hintNode), actions)); 
   const right = el('section', {class:'panel'},
     el('h3', {text:'Bảng xếp hạng lượt ' + S.main.round}),
     pick && turnInfo().turn ? el('div', {class:'note', text:'Đang chờ ' + turnInfo().turn.name + ' chọn quà. Nếu bạn ấy vắng mặt, bấm Bỏ qua.'}) : null,
@@ -564,7 +562,6 @@ async function resetRound(){
   finally { S.busy = false; render(); }
 }
 
-// BẢO ĐẢM KHÔNG BỊ XÓA DỮ LIỆU CŨ KHI LƯU
 async function saveCfg(partial){
   await S.db.doc('config/main').set({...S.cfg, ...partial}, {merge: true});
 }
@@ -673,14 +670,12 @@ function render(){
   S.force = false; S.pending = false; S.lastKey = v.key;
   clearInterval(S.tick);
 
-  // Cập nhật thông minh: Chỉ thay đổi nội dung Bảng xếp hạng nếu đang ở cùng 1 màn hình
   if (same && !v.stat && main.querySelector('.lb')) {
       const newDom = v.build();
       const oldTable = main.querySelector('.lb');
       const newTable = newDom.querySelector('.lb');
       if (oldTable && newTable) {
           oldTable.replaceWith(newTable);
-          // Cập nhật thêm số lượng người đã xong ở header (nếu có)
           const oldMeta = main.querySelector('.qmeta');
           const newMeta = newDom.querySelector('.qmeta');
           if (oldMeta && newMeta) oldMeta.replaceWith(newMeta);
@@ -688,7 +683,6 @@ function render(){
       }
   }
 
-  // Khúc này giữ nguyên như cũ
   main.replaceChildren(v.build());
   if (v.after) v.after();
 }
@@ -708,7 +702,6 @@ function checkOverflow(){
   render();
   setTimeout(() => { if (!(S.loaded.main && S.loaded.cfg && S.loaded.players)){ S.slow = true; schedule(); } }, 10000);
 
-  // 1. Khai báo DB thật: Gắn config Firebase của đại ca vào đây
   const firebaseConfig = {
     apiKey: "YOUR_API_KEY",
     authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
@@ -721,28 +714,30 @@ function checkOverflow(){
   S.db = firebase.firestore();
   S.booted = true;
 
-  // 2. Cấp UID ẩn danh cho người chơi & Phân quyền Admin
   S.uid = store('quiz_uid');
   if (!S.uid) {
     S.uid = 'user_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
     store('quiz_uid', S.uid);
   }
   
-  // BẢO MẬT TRANG ADMIN
   if (location.hash === '#admin') {
     if (sessionStorage.getItem('admin_auth') === '1') {
       S.isAdmin = true;
       S.mode = 'admin';
     } else {
-      location.hash = ''; // Xóa hash nếu chưa đăng nhập, để tránh lộ màn hình
+      location.hash = ''; 
     }
   }
 
   const onErr = e => { S.err = e && e.code; toast('Mất kết nối dữ liệu. Nhớ mở Rule Firebase nhé đại ca.'); };
 
-  // XỬ LÝ LỖI KHÔNG THẤY NGƯỜI CHƠI KHI QUA LƯỢT MỚI
+  // XỬ LÝ LỖI KHÔNG TẢI ĐƯỢC NGƯỜI CHƠI LÚC MỚI VÀO
   let playerUnsub = null;
+  let currentListenRound = null;
   function listenPlayers() {
+    if (currentListenRound === S.main.round) return; 
+    currentListenRound = S.main.round;
+    
     if (playerUnsub) playerUnsub();
     playerUnsub = S.db.collection('players').where('round', '==', S.main.round).onSnapshot(snap => {
       S.players = snap.docs.map(d => { const x = d.data(); return Object.assign({round:0, name:'', joinedAt:0, answers:[], correct:0, timeMs:0, finished:false, prizeId:'', skipped:false}, x, {uid:d.id}); });
@@ -750,15 +745,14 @@ function checkOverflow(){
     }, onErr);
   }
 
-  // 3. Khởi chạy luồng dữ liệu (Đã áp dụng tối ưu query Read Firebase)
   S.db.doc('state/main').onSnapshot(s => {
     const prev = S.main ? S.main.round : null;
     S.main = Object.assign({round:1, status:'lobby'}, s.exists ? s.data() : {});
     if (prev !== S.main.round){ 
       S.full = false; 
       S.resetArmed = false; 
-      listenPlayers(); // Đăng ký lại Listener khi qua vòng mới
     }
+    listenPlayers(); // Gọi luôn ở đây để đảm bảo load người chơi ngay lần đầu tiên
     S.loaded.main = true; checkOverflow();
     if (S.lastKey && S.lastKey.indexOf('admin:') === 0) S.force = true;
     schedule();
