@@ -1,2341 +1,778 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bình Nguyên Vô Tận</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Đố Vui Nội Bộ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Be+Vietnam+Pro:wght@400;500;600&display=swap">
 <style>
-
-/* ======================================================================
-   BẢNG MÀU / FONT — "Thẻ mục lục thư viện" (card-catalog)
-   ====================================================================== */
+/* Concept: phòng điều khiển cho quản trị viên (hai cột: mã QR + điều khiển | bảng xếp hạng trực tiếp),
+   và một cột hẹp, to, dễ bấm bằng một tay cho người chơi trên điện thoại. */
 :root{
-  --bg:            #16241F;   /* nền bảng đen phòng đọc */
-  --bg-soft:       #1E332B;
-  --card:          #F3EAD3;   /* màu giấy thẻ mục lục */
-  --card-edge:     #E4D6AF;
-  --ink:           #22201A;   /* mực đen */
-  --ink-soft:      #5B5747;
-  --accent:        #C98A2C;   /* mực dấu mộc (mustard) */
-  --accent-dark:   #A66D1D;
-  --sage:          #7FA491;   /* nhãn xanh rêu */
-  --danger:        #A8493A;
-  --radius:        4px;
-  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
-  --sans:  "Inter", -apple-system, "Segoe UI", sans-serif;
-  --mono:  "JetBrains Mono", "Courier New", monospace;
+  --bg:#EEF1F6; --surface:#FFFFFF; --surface2:#F5F7FB; --ink:#101828; --muted:#566178; --line:#D8DEE9;
+  --accent:#2447F5; --accent-ink:#FFFFFF; --accent-soft:#E3E9FF;
+  --gold:#F2B705; --silver:#B4BDCC; --bronze:#D09469; --on-medal:#101828;
+  --ok:#0E8A4A; --ok-soft:#DDF4E7; --bad:#C8321F; --bad-soft:#FCE5E1; --warn-soft:#FFF3CC;
+  --f-display:'Bricolage Grotesque','Be Vietnam Pro',system-ui,sans-serif;
+  --f-body:'Be Vietnam Pro',system-ui,-apple-system,'Segoe UI',sans-serif;
 }
-*{box-sizing:border-box;}
-html,body{margin:0;padding:0;}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1320; --surface:#171E2F; --surface2:#1D263A; --ink:#EEF1F8; --muted:#9AA6BD; --line:#2A3550;
+    --accent:#7E95FF; --accent-ink:#0B1020; --accent-soft:#222E57;
+    --gold:#F5C842; --silver:#8F9AB0; --bronze:#C58A5E;
+    --ok:#3DD68C; --ok-soft:#14352A; --bad:#FF8A7E; --bad-soft:#3B1D1A; --warn-soft:#3A3114;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1320; --surface:#171E2F; --surface2:#1D263A; --ink:#EEF1F8; --muted:#9AA6BD; --line:#2A3550;
+  --accent:#7E95FF; --accent-ink:#0B1020; --accent-soft:#222E57;
+  --gold:#F5C842; --silver:#8F9AB0; --bronze:#C58A5E;
+  --ok:#3DD68C; --ok-soft:#14352A; --bad:#FF8A7E; --bad-soft:#3B1D1A; --warn-soft:#3A3114;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
 body{
-  background:
-    radial-gradient(ellipse at top, #1c332b 0%, var(--bg) 60%);
-  color: var(--card);
-  font-family: var(--sans);
-  min-height:100vh;
-  -webkit-font-smoothing:antialiased;
+  background:var(--bg); color:var(--ink); font-family:var(--f-body); font-size:15px; line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px));
+  padding-block:16px 40px; margin:0;
+}
+h1,h2,h3{font-family:var(--f-display); margin:0; line-height:1.15; text-wrap:balance; letter-spacing:-0.01em}
+h2{font-size:1.5rem; font-weight:800} h3{font-size:1.1rem; font-weight:600}
+p{margin:0}
+.wrap{max-width:1080px; margin:0 auto; display:flex; flex-direction:column; gap:20px}
+.col{width:100%; max-width:520px; margin:0 auto; display:flex; flex-direction:column; gap:16px}
+.muted{color:var(--muted)} .small{font-size:13px}
+button,input,textarea{font:inherit; color:inherit}
+:focus-visible{outline:3px solid var(--accent); outline-offset:2px}
+
+/* header */
+.hdr{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+.brand{display:flex; align-items:center; gap:12px; min-width:0}
+.brand b{font-family:var(--f-display); font-weight:800; font-size:1.3rem; letter-spacing:-0.02em}
+.mark{width:34px; height:34px; border-radius:9px; background:var(--accent); color:var(--accent-ink); display:grid; place-items:center; font-family:var(--f-display); font-weight:800; font-size:1.1rem}
+.hdr-r{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.pill{display:inline-flex; align-items:center; gap:6px; padding:4px 11px; border-radius:99px; background:var(--surface); border:1px solid var(--line); font-size:13px; font-weight:600; white-space:nowrap}
+.pill i{width:8px; height:8px; border-radius:50%; background:var(--muted); display:inline-block}
+.pill.running i{background:var(--ok)} .pill.pick i{background:var(--gold)} .pill.lobby i{background:var(--accent)}
+
+/* controls */
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:10px 18px; border-radius:10px; border:1px solid var(--line); background:var(--surface); font-weight:600; cursor:pointer}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.5; cursor:not-allowed}
+.btn.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
+.btn.primary:hover:not(:disabled){filter:brightness(1.08)}
+.btn.danger{background:var(--bad); color:var(--surface); border-color:var(--bad)}
+.btn.sm{min-height:34px; padding:4px 12px; font-size:13px}
+.btn.block{width:100%}
+.seg{display:inline-flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--surface)}
+.seg button{border:0; background:transparent; padding:7px 12px; font-size:13px; font-weight:600; cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent); color:var(--accent-ink)}
+input[type=text],input[type=number],textarea{width:100%; padding:11px 13px; border-radius:10px; border:1px solid var(--line); background:var(--surface); min-height:44px}
+textarea{resize:vertical}
+label.f{display:flex; flex-direction:column; gap:6px; font-weight:600; font-size:14px}
+
+/* panels */
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:20px; display:flex; flex-direction:column; gap:14px; min-width:0}
+.panel.flat{background:transparent; border-style:dashed}
+.grid2{display:grid; grid-template-columns:minmax(0,340px) minmax(0,1fr); gap:20px; align-items:start}
+@media (max-width:820px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.tabs{display:flex; gap:4px; border-bottom:1px solid var(--line); overflow-x:auto}
+.tabs button{border:0; background:transparent; padding:10px 14px; font-weight:600; color:var(--muted); cursor:pointer; border-bottom:3px solid transparent; white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink); border-bottom-color:var(--accent)}
+.note{padding:10px 14px; border-radius:10px; background:var(--accent-soft); font-size:14px}
+.note.warn{background:var(--warn-soft)}
+.note.bad{background:var(--bad-soft)}
+.empty{color:var(--muted); padding:18px 0; text-align:center}
+.row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+
+/* QR */
+.qr{background:#fff; padding:12px; border-radius:12px; width:fit-content; margin:0 auto; line-height:0; border:1px solid var(--line)}
+.qr img,.qr canvas{max-width:100%}
+.linkbox{font-size:12px; word-break:break-all; background:var(--surface2); border-radius:8px; padding:8px 10px; user-select:all}
+
+/* leaderboard */
+.tscroll{overflow-x:auto}
+table.lb{width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums}
+.lb th{font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); text-align:left; padding:6px 10px; font-weight:600; white-space:nowrap}
+.lb td{padding:10px; border-top:1px solid var(--line); vertical-align:middle}
+.lb .num{text-align:right; white-space:nowrap}
+.lb tr.me td{background:var(--accent-soft)}
+.rk{display:inline-grid; place-items:center; width:28px; height:28px; border-radius:50%; background:var(--surface2); border:1px solid var(--line); font-family:var(--f-display); font-weight:800; font-size:13px}
+.rk.r1{background:var(--gold); border-color:var(--gold); color:var(--on-medal)}
+.rk.r2{background:var(--silver); border-color:var(--silver); color:var(--on-medal)}
+.rk.r3{background:var(--bronze); border-color:var(--bronze); color:var(--on-medal)}
+.tag{display:inline-block; padding:2px 9px; border-radius:99px; font-size:12px; font-weight:600; background:var(--surface2); border:1px solid var(--line)}
+.tag.ok{background:var(--ok-soft); border-color:transparent; color:var(--ok)}
+.tag.turn{background:var(--gold); border-color:transparent; color:var(--on-medal)}
+
+/* player screens */
+.hero{text-align:center; display:flex; flex-direction:column; gap:8px; padding:8px 0}
+.hero h2{font-size:1.9rem}
+.chips{display:flex; flex-wrap:wrap; gap:8px; justify-content:center}
+.chip{padding:5px 12px; border-radius:99px; background:var(--surface2); border:1px solid var(--line); font-size:14px; font-weight:500}
+.chip.me{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
+.big{font-family:var(--f-display); font-weight:800; font-size:3.2rem; line-height:1; font-variant-numeric:tabular-nums}
+.qmeta{display:flex; justify-content:space-between; align-items:baseline; font-weight:600; color:var(--muted)}
+.tsec{font-family:var(--f-display); font-weight:800; font-size:1.6rem; color:var(--ink); font-variant-numeric:tabular-nums}
+.tbar{height:10px; border-radius:99px; background:var(--line); overflow:hidden}
+.tfill{height:100%; width:100%; background:var(--accent); transform-origin:left}
+.tfill.low{background:var(--bad)}
+.qtext{font-family:var(--f-display); font-weight:600; font-size:1.45rem; line-height:1.3; text-wrap:balance}
+.opts{display:flex; flex-direction:column; gap:10px}
+.opt{display:grid; grid-template-columns:34px 1fr; gap:12px; align-items:center; text-align:left; width:100%; padding:14px; min-height:60px; border:2px solid var(--line); border-radius:12px; background:var(--surface); font-weight:600; font-size:16px; cursor:pointer}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.sel{background:var(--accent-soft); border-color:var(--accent)}
+.opt .l{width:34px; height:34px; border-radius:8px; background:var(--surface2); display:grid; place-items:center; font-family:var(--f-display); font-weight:800}
+.opt.sel .l{background:var(--accent); color:var(--accent-ink)}
+.prizes{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px}
+.prize{padding:16px 12px; min-height:84px; border:2px solid var(--line); border-radius:12px; background:var(--surface); font-weight:600; cursor:pointer; font-size:15px}
+.prize:hover:not(:disabled){border-color:var(--gold); background:var(--warn-soft)}
+.prize:disabled{opacity:.5; cursor:not-allowed}
+
+/* editors */
+.qcard{border:1px solid var(--line); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:12px; background:var(--surface2)}
+.qhead{display:flex; justify-content:space-between; align-items:center; gap:8px}
+.qtools{display:flex; gap:6px}
+.optrow{display:grid; grid-template-columns:auto 28px 1fr; gap:10px; align-items:center}
+.optrow input[type=radio]{width:20px; height:20px; accent-color:var(--accent)}
+.optrow .ltr{font-family:var(--f-display); font-weight:800; text-align:center}
+.timef{display:flex; align-items:center; gap:10px; font-size:14px; font-weight:600}
+.timef input{width:90px}
+.prow{display:grid; grid-template-columns:28px 1fr auto; gap:10px; align-items:center}
+details.h{border:1px solid var(--line); border-radius:12px; background:var(--surface); padding:4px 16px}
+details.h summary{cursor:pointer; padding:12px 0; font-weight:600; display:flex; justify-content:space-between; gap:8px}
+
+#toasts{position:fixed; left:0; right:0; bottom:0; padding:16px 16px calc(16px + env(safe-area-inset-bottom, 0px)); display:flex; flex-direction:column; align-items:center; gap:8px; pointer-events:none; z-index:50}
+.toast{background:var(--ink); color:var(--bg); padding:10px 16px; border-radius:10px; font-weight:500; max-width:420px; box-shadow:0 6px 20px rgba(0,0,0,.25)}
+@media (prefers-reduced-motion: no-preference){
+  .tfill{transition:transform .1s linear}
+  .toast{animation:up .2s ease-out}
+  @keyframes up{from{transform:translateY(8px); opacity:0}to{transform:none; opacity:1}}
 }
-::selection{ background: var(--accent); color:#1a1408; }
-button{ font-family: inherit; cursor:pointer; }
-a{ color: inherit; }
-
-/* subtle chalk texture */
-body::before{
-  content:"";
-  position:fixed; inset:0;
-  background-image: radial-gradient(rgba(255,255,255,0.025) 1px, transparent 1px);
-  background-size: 3px 3px;
-  pointer-events:none;
-  z-index:0;
-}
-
-/* ======================================================================
-   MÀN HÌNH ĐĂNG NHẬP
-   ====================================================================== */
-#loginScreen{
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:24px;
-  position:relative; z-index:1;
-}
-.catalog-card{
-  background: var(--card);
-  color: var(--ink);
-  width:100%;
-  max-width:400px;
-  border-radius: var(--radius);
-  padding:40px 36px 34px;
-  position:relative;
-  box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6), 0 2px 0 var(--card-edge);
-  border:1px solid var(--card-edge);
-}
-.catalog-card::before{
-  /* punch hole of an index card */
-  content:"";
-  position:absolute;
-  top:18px; left:50%;
-  transform:translateX(-50%);
-  width:14px; height:14px;
-  border-radius:50%;
-  background: var(--bg);
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
-}
-.catalog-eyebrow{
-  font-family: var(--mono);
-  font-size:11px;
-  letter-spacing:.14em;
-  text-transform:uppercase;
-  color: var(--accent-dark);
-  text-align:center;
-  margin:18px 0 6px;
-}
-.catalog-title{
-  font-family: var(--serif);
-  font-size:26px;
-  font-weight:700;
-  text-align:center;
-  margin:0 0 6px;
-  letter-spacing:-0.01em;
-}
-.catalog-sub{
-  text-align:center;
-  font-size:13px;
-  color: var(--ink-soft);
-  margin:0 0 28px;
-  line-height:1.5;
-}
-.field-label{
-  font-family: var(--mono);
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.08em;
-  color: var(--ink-soft);
-  display:block;
-  margin-bottom:8px;
-}
-#codeInput{
-  width:100%;
-  font-family: var(--mono);
-  font-size:18px;
-  letter-spacing:.12em;
-  padding:13px 14px;
-  border:1.5px solid var(--card-edge);
-  border-bottom:2.5px solid var(--ink);
-  border-radius:2px;
-  background:#fffdf7;
-  color: var(--ink);
-  outline:none;
-  transition: border-color .15s ease;
-}
-#codeInput:focus,#provinceInput:focus,#passwordInput:focus{ border-color: var(--accent); }
-#provinceInput,#passwordInput{
-  width:100%; font-family:var(--mono); font-size:15px;
-  padding:13px 14px; border:1.5px solid var(--card-edge);
-  border-bottom:2.5px solid var(--ink); border-radius:2px;
-  background:#fffdf7; color:var(--ink); outline:none;
-}
-#loginForm{ display:flex; flex-direction:column; gap:18px; }
-#loginBtn{
-  background: var(--ink);
-  color: var(--card);
-  border:none;
-  padding:13px 16px;
-  border-radius:2px;
-  font-size:14px;
-  font-weight:600;
-  letter-spacing:.03em;
-  transition: transform .12s ease, background .15s ease;
-}
-#loginBtn:hover{ background: var(--accent-dark); }
-#loginBtn:active{ transform: scale(0.98); }
-#loginError{
-  font-size:12.5px;
-  color: var(--danger);
-  text-align:center;
-  min-height:16px;
-  font-weight:600;
-}
-.shake{ animation: shake .35s; }
-@keyframes shake{
-  0%,100%{ transform:translateX(0); }
-  20%{ transform:translateX(-6px); }
-  40%{ transform:translateX(6px); }
-  60%{ transform:translateX(-4px); }
-  80%{ transform:translateX(4px); }
-}
-
-/* ======================================================================
-   TRANG CHÍNH
-   ====================================================================== */
-#mainScreen{ display:none; position:relative; z-index:1; min-height:100vh; }
-.topbar{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:22px 32px;
-  border-bottom:1px solid rgba(243,234,211,0.12);
-}
-.brand{
-  display:flex; align-items:baseline; gap:10px;
-}
-.brand-mark{
-  font-family:var(--mono);
-  font-size:11px;
-  color:var(--accent);
-  border:1px solid var(--accent);
-  padding:2px 6px;
-  border-radius:2px;
-  letter-spacing:.08em;
-}
-.brand-name{
-  font-family: var(--serif);
-  font-size:20px;
-  font-weight:700;
-}
-.who{
-  font-family: var(--mono);
-  font-size:12px;
-  color: rgba(243,234,211,0.6);
-  display:flex; align-items:center; gap:14px;
-}
-#logoutBtn{
-  background:none;
-  border:1px solid rgba(243,234,211,0.3);
-  color: var(--card);
-  padding:6px 12px;
-  border-radius:2px;
-  font-size:12px;
-}
-#logoutBtn:hover{ border-color: var(--accent); color: var(--accent); }
-
-.layout{
-  display:grid;
-  grid-template-columns: 250px 1fr;
-  gap:0;
-  max-width:1180px;
-  margin:0 auto;
-}
-@media (max-width: 780px){
-  .layout{ grid-template-columns: 1fr; }
-}
-
-/* Danh mục dạng "tab thẻ mục lục" */
-.drawer{
-  padding:28px 12px 40px 28px;
-  border-right:1px solid rgba(243,234,211,0.1);
-}
-.drawer-label{
-  font-family: var(--mono);
-  font-size:10.5px;
-  letter-spacing:.14em;
-  text-transform:uppercase;
-  color: rgba(243,234,211,0.45);
-  margin:0 0 14px 4px;
-}
-.tab-btn{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  width:100%;
-  text-align:left;
-  background: transparent;
-  border:none;
-  border-left:3px solid transparent;
-  color: rgba(243,234,211,0.75);
-  padding:11px 12px;
-  font-size:14px;
-  border-radius: 0 3px 3px 0;
-  margin-bottom:2px;
-  transition: all .12s ease;
-}
-.tab-btn .ic{ font-size:16px; }
-.tab-btn .ct{
-  margin-left:auto;
-  font-family:var(--mono);
-  font-size:10.5px;
-  color: rgba(243,234,211,0.35);
-}
-.tab-btn:hover{ background: rgba(243,234,211,0.06); color:var(--card); }
-.tab-btn.active{
-  background: rgba(201,138,44,0.14);
-  border-left-color: var(--accent);
-  color: var(--card);
-  font-weight:600;
-}
-
-/* Nội dung tài liệu */
-.content{ padding:32px 32px 60px; }
-.content-header{ margin-bottom:22px; }
-.content-eyebrow{
-  font-family:var(--mono);
-  font-size:11px;
-  color: var(--sage);
-  letter-spacing:.1em;
-  text-transform:uppercase;
-}
-.content-title{
-  font-family: var(--serif);
-  font-size:28px;
-  font-weight:700;
-  margin:4px 0 8px;
-}
-.content-desc{
-  color: rgba(243,234,211,0.6);
-  font-size:14px;
-  max-width:560px;
-  line-height:1.6;
-}
-.search-row{
-  margin:18px 0 22px;
-}
-#searchInput{
-  width:100%;
-  max-width:320px;
-  background: rgba(243,234,211,0.06);
-  border:1px solid rgba(243,234,211,0.18);
-  color: var(--card);
-  padding:9px 12px;
-  border-radius:3px;
-  font-size:13px;
-  outline:none;
-}
-#searchInput:focus{ border-color: var(--accent); }
-#searchInput::placeholder{ color: rgba(243,234,211,0.35); }
-
-.card-grid{
-  display:grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap:14px;
-}
-.item-card{
-  background: var(--card);
-  color: var(--ink);
-  border-radius:3px;
-  padding:18px 18px 16px;
-  border:1px solid var(--card-edge);
-  border-bottom:3px solid var(--card-edge);
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  text-decoration:none;
-  transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
-}
-.item-card:hover{
-  transform: translateY(-3px);
-  border-bottom-color: var(--accent);
-  box-shadow: 0 14px 26px -14px rgba(0,0,0,0.5);
-}
-.item-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
-.item-title{ font-family:var(--serif); font-weight:700; font-size:15.5px; line-height:1.35; }
-.item-type{
-  font-family:var(--mono);
-  font-size:9.5px;
-  letter-spacing:.05em;
-  background: var(--ink);
-  color: var(--card);
-  padding:2px 6px;
-  border-radius:2px;
-  white-space:nowrap;
-  flex-shrink:0;
-}
-.item-desc{ font-size:12.5px; color: var(--ink-soft); line-height:1.5; flex-grow:1; }
-.item-open{
-  font-family:var(--mono);
-  font-size:11px;
-  color: var(--accent-dark);
-  font-weight:600;
-  letter-spacing:.03em;
-}
-.empty-state{
-  color: rgba(243,234,211,0.4);
-  font-size:14px;
-  padding:40px 4px;
-  font-family:var(--mono);
-}
-
-.footnote{
-  max-width:1180px; margin:0 auto; padding:0 32px 30px;
-  font-size:11px; color:rgba(243,234,211,0.3); font-family:var(--mono);
-}
-
-/* ===================== KHU VỰC QUẢN TRỊ ===================== */
-#adminPanel{display:none;margin:0 0 24px;padding:20px;background:rgba(243,234,211,.06);border:1px solid rgba(243,234,211,.14);border-radius:4px}
-.admin-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
-.admin-title{font-family:var(--serif);font-size:20px;font-weight:700;margin:0}
-.admin-sub{margin:4px 0 0;font-size:12px;color:rgba(243,234,211,.55)}
-.admin-form{display:grid;grid-template-columns:1fr 1.5fr auto;gap:10px;margin-bottom:16px}
-.admin-input{width:100%;background:#fffdf7;color:var(--ink);border:1px solid var(--card-edge);padding:10px 11px;border-radius:3px;outline:none}
-.admin-input:focus{border-color:var(--accent)}
-.admin-btn{border:1px solid var(--accent);background:var(--accent);color:#1a1408;padding:10px 14px;border-radius:3px;font-weight:700}
-.admin-btn:hover{background:#d69a3c}
-.admin-btn.secondary{background:transparent;color:var(--card);border-color:rgba(243,234,211,.25)}
-.admin-list{display:flex;flex-direction:column;gap:8px}
-.admin-rule{display:grid;grid-template-columns:1fr 1.5fr auto;gap:10px;align-items:center;padding:10px;background:rgba(0,0,0,.12);border:1px solid rgba(243,234,211,.08);border-radius:3px}
-.admin-rule-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.admin-rule-url{font-family:var(--mono);font-size:10px;color:rgba(243,234,211,.5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.admin-actions{display:flex;gap:6px}
-.admin-actions button{padding:6px 9px;font-size:11px;border-radius:2px;background:transparent;color:var(--card);border:1px solid rgba(243,234,211,.22)}
-.admin-actions .delete-rule{color:#e7a096;border-color:rgba(168,73,58,.5)}
-.rule-link{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:none;border-left:3px solid transparent;color:rgba(243,234,211,.75);padding:11px 12px;font-size:14px;border-radius:0 3px 3px 0;margin-bottom:2px;transition:all .12s ease}
-.rule-link:hover{background:rgba(243,234,211,.06);color:var(--card)}
-.rule-link .ic{font-size:16px}
-.admin-badge{font-family:var(--mono);font-size:9px;color:var(--accent);border:1px solid rgba(201,138,44,.45);padding:2px 5px;border-radius:2px;margin-left:auto}
-@media(max-width:700px){.admin-form,.admin-rule{grid-template-columns:1fr}.admin-actions{justify-content:flex-start}}
-
-
-/* ===================== TÌM KIẾM NHANH ===================== */
-.quick-search-panel{
-  margin:0 0 20px;
-  padding:18px;
-  background:rgba(243,234,211,.045);
-  border:1px solid rgba(243,234,211,.14);
-  border-radius:4px;
-}
-.quick-search-title{
-  font-family:var(--mono);
-  font-size:10.5px;
-  letter-spacing:.14em;
-  text-transform:uppercase;
-  color:rgba(243,234,211,.55);
-  margin:0 0 10px;
-}
-.quick-search-row{
-  display:flex;
-  gap:8px;
-}
-#quickSearchInput{
-  flex:1;
-  min-width:0;
-  background:rgba(243,234,211,.06);
-  border:1px solid rgba(243,234,211,.18);
-  color:var(--card);
-  padding:11px 13px;
-  border-radius:3px;
-  font-size:13px;
-  outline:none;
-}
-#quickSearchInput:focus{border-color:var(--accent)}
-#quickSearchInput::placeholder{color:rgba(243,234,211,.35)}
-.quick-search-hint{
-  margin:8px 0 0;
-  font-size:11px;
-  color:rgba(243,234,211,.4);
-  font-family:var(--mono);
-}
-.quick-results{
-  display:none;
-  margin-top:10px;
-  border-top:1px solid rgba(243,234,211,.08);
-  padding-top:8px;
-}
-.quick-results.show{display:block}
-.quick-result-item{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  width:100%;
-  padding:8px 6px;
-  border:0;
-  background:transparent;
-  color:var(--card);
-  text-align:left;
-  border-radius:3px;
-  cursor:pointer;
-  font-size:13px;
-}
-.quick-result-item:hover{background:rgba(243,234,211,.07)}
-.quick-result-item .quick-icon{width:20px;text-align:center}
-.quick-result-empty{
-  padding:8px 6px;
-  color:rgba(243,234,211,.42);
-  font-size:12px;
-}
-.quick-result-badge{
-  margin-left:auto;
-  font-family:var(--mono);
-  font-size:9px;
-  color:var(--accent);
-  border:1px solid rgba(201,138,44,.45);
-  padding:2px 5px;
-  border-radius:2px;
-}
-
-/* Trên điện thoại: cột Danh mục luôn hiển thị */
-@media (max-width:780px){
-  .layout{
-    display:flex;
-    flex-direction:column;
-    width:100%;
-  }
-
-  .drawer{
-    display:block !important;
-    width:100%;
-    padding:18px 14px 10px;
-    border-right:none;
-    border-bottom:1px solid rgba(243,234,211,.1);
-    overflow:visible;
-  }
-
-  .drawer-label{
-    margin-left:2px;
-    margin-bottom:10px;
-  }
-
-  #tabList{
-    display:flex;
-    flex-direction:column;
-    gap:2px;
-  }
-
-  .tab-btn,.rule-link{
-    width:100%;
-    min-height:44px;
-  }
-
-  .content{
-    width:100%;
-    padding:18px 14px 40px;
-  }
-
-  .topbar{
-    padding:14px 14px;
-    gap:10px;
-  }
-
-  .brand-name{font-size:16px}
-  .brand-mark{font-size:10px}
-
-  .who{
-    font-size:10px;
-    gap:6px;
-  }
-
-  #adminToggleBtn,#logoutBtn{
-    padding:6px 8px !important;
-    font-size:10px !important;
-  }
-
-  .admin-form,.admin-rule{
-    grid-template-columns:1fr;
-  }
-
-  .admin-actions{
-    justify-content:flex-start;
-  }
-
-  .quick-search-row{
-    display:flex;
-  }
-
-  .quick-search-panel{
-    margin-bottom:16px;
-    padding:14px;
-  }
-}
-
-
-/* ===================== RESPONSIVE FIX v2 ===================== */
-html, body {
-  width: 100%;
-  min-width: 0;
-  overflow-x: hidden;
-}
-
-#mainScreen {
-  width: 100%;
-  min-width: 0;
-}
-
-.topbar {
-  width: 100%;
-  min-width: 0;
-}
-
-.layout {
-  width: 100%;
-  min-width: 0;
-}
-
-.drawer,
-.content {
-  min-width: 0;
-}
-
-@media (max-width: 780px) {
-  #mainScreen {
-    overflow-x: hidden;
-  }
-
-  .topbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    padding: 12px;
-  }
-
-  .brand {
-    min-width: 0;
-    flex: 1 1 100%;
-    margin-bottom: 8px;
-  }
-
-  .brand-name {
-    min-width: 0;
-    font-size: 16px;
-    line-height: 1.2;
-  }
-
-  .who {
-    width: 100%;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-  }
-
-  #whoName {
-    flex: 1 1 100%;
-    overflow-wrap: anywhere;
-  }
-
-  .layout {
-    display: flex !important;
-    flex-direction: column !important;
-    width: 100% !important;
-    max-width: none !important;
-    margin: 0 !important;
-  }
-
-  .drawer {
-    display: block !important;
-    width: 100% !important;
-    max-width: none !important;
-    padding: 16px 12px 10px !important;
-    border-right: 0 !important;
-    border-bottom: 1px solid rgba(243,234,211,0.12);
-    overflow: visible !important;
-  }
-
-  .drawer-label {
-    display: block !important;
-    margin: 0 0 8px 2px !important;
-  }
-
-  #tabList {
-    display: flex !important;
-    flex-direction: column !important;
-    width: 100% !important;
-  }
-
-  .tab-btn,
-  .rule-link {
-    display: flex !important;
-    width: 100% !important;
-    min-width: 0;
-    min-height: 44px;
-  }
-
-  .tab-btn span:not(.ic),
-  .rule-link span:not(.ic) {
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
-
-  .content {
-    display: block !important;
-    width: 100% !important;
-    max-width: none !important;
-    min-width: 0 !important;
-    padding: 14px 12px 40px !important;
-  }
-
-  /* Không để trạng thái "chưa có danh mục" che/mất khu vực nội dung */
-  .content-header {
-    display: none !important;
-  }
-
-  .quick-search-panel {
-    display: block !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    margin: 0 0 14px !important;
-  }
-
-  .quick-search-row {
-    display: flex !important;
-    width: 100% !important;
-  }
-
-  #quickSearchInput {
-    display: block !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    height: 44px;
-    font-size: 14px;
-  }
-
-  .quick-results {
-    width: 100% !important;
-    max-height: 55vh;
-    overflow-y: auto;
-  }
-
-  .card-grid {
-    display: grid !important;
-    width: 100% !important;
-    grid-template-columns: 1fr !important;
-    gap: 10px !important;
-  }
-
-  .item-card {
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-
-  #adminPanel {
-    width: 100% !important;
-    min-width: 0 !important;
-    overflow: hidden;
-  }
-
-  .admin-form,
-  .admin-rule {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    width: 100% !important;
-  }
-
-  .admin-input {
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-
-  .admin-rule-url {
-    white-space: normal !important;
-    overflow-wrap: anywhere !important;
-  }
-
-  .admin-head {
-    align-items: flex-start;
-  }
-
-  .footnote {
-    width: 100%;
-    padding: 0 12px 24px;
-    overflow-wrap: anywhere;
-  }
-}
-
-/* Điện thoại rất nhỏ */
-@media (max-width: 420px) {
-  .catalog-card {
-    max-width: 100%;
-    padding: 36px 20px 28px;
-  }
-
-  .catalog-title {
-    font-size: 23px;
-  }
-
-  .topbar {
-    padding: 10px;
-  }
-
-  .brand-name {
-    font-size: 15px;
-  }
-
-  .content {
-    padding-left: 10px !important;
-    padding-right: 10px !important;
-  }
-
-  .drawer {
-    padding-left: 10px !important;
-    padding-right: 10px !important;
-  }
-
-  #adminToggleBtn,
-  #logoutBtn {
-    font-size: 10px !important;
-    padding: 6px 8px !important;
-  }
-}
-
-
-/* ===== FIX DANH MỤC RULE TRÊN ĐIỆN THOẠI ===== */
-@media (max-width:780px){
-  .drawer{
-    display:block !important;
-    visibility:visible !important;
-    opacity:1 !important;
-    width:100% !important;
-    height:auto !important;
-    max-height:none !important;
-    overflow:visible !important;
-  }
-  #tabList{
-    display:flex !important;
-    flex-direction:column !important;
-    width:100% !important;
-    height:auto !important;
-  }
-  #tabList .dynamic-rule,
-  #tabList .admin-only-rule{
-    display:flex !important;
-    visibility:visible !important;
-    opacity:1 !important;
-  }
-  #tabList .dynamic-rule[style*="display: none"],
-  #tabList .admin-only-rule[style*="display: none"]{
-    display:none !important;
-  }
-  .rule-link{
-    min-height:46px;
-    width:100% !important;
-    white-space:normal !important;
-  }
-  .rule-link > span:nth-child(2){
-    overflow-wrap:anywhere;
-    word-break:break-word;
-  }
-}
-
-
-/* ===== THƯ MỤC CHA / RULE CON ===== */
-.category-folder{
-  width:100%;
-  margin-bottom:4px;
-}
-.category-head{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  width:100%;
-  min-height:44px;
-  padding:10px 12px;
-  border:0;
-  border-left:3px solid transparent;
-  border-radius:0 3px 3px 0;
-  background:transparent;
-  color:rgba(243,234,211,.85);
-  text-align:left;
-  cursor:pointer;
-  font-size:14px;
-}
-.category-head:hover,
-.category-folder.active .category-head{
-  background:rgba(201,138,44,.12);
-  border-left-color:var(--accent);
-  color:var(--card);
-}
-.category-name{
-  flex:1;
-  min-width:0;
-  font-weight:600;
-}
-.category-children{
-  padding-left:16px;
-}
-.category-children .rule-link{
-  margin-bottom:1px;
-  font-size:13px;
-}
-.category-empty{
-  padding:7px 12px 8px 38px;
-  color:rgba(243,234,211,.25);
-  font-family:var(--mono);
-  font-size:10px;
-}
-.admin-form{
-  grid-template-columns:1fr 1.4fr 170px auto !important;
-}
-#ruleCategoryInput{
-  appearance:auto;
-}
-@media(max-width:780px){
-  .category-head{
-    min-height:48px;
-    padding:11px 10px;
-    font-size:14px;
-  }
-  .category-children{
-    padding-left:8px;
-  }
-  .category-children .rule-link{
-    min-height:44px;
-    padding:10px 9px;
-  }
-  .category-empty{
-    padding-left:36px;
-  }
-  .admin-form{
-    grid-template-columns:1fr !important;
-  }
-  #ruleCategoryInput{
-    height:44px;
-  }
-}
-
-
-.sync-status{font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:rgba(243,234,211,.35);margin-left:auto}
-@media(max-width:780px){.sync-status{display:block;margin:4px 0 0}}
-
-/* ===== TRIỂN KHAI: GHI CHÚ NHANH / THÔNG BÁO ===== */
-.deploy-admin-panel{
-  margin:14px 0 18px;
-  padding:16px;
-  border:1px solid rgba(201,138,44,.25);
-  border-radius:4px;
-  background:rgba(201,138,44,.045);
-}
-.deploy-admin-title{
-  font-family:var(--serif);
-  font-weight:700;
-  font-size:18px;
-  margin-bottom:5px;
-}
-.deploy-admin-desc{
-  color:rgba(243,234,211,.48);
-  font-size:11px;
-  margin-bottom:12px;
-}
-.deploy-note-form{
-  display:grid;
-  grid-template-columns:1fr auto;
-  gap:10px;
-}
-.deploy-note-input{
-  width:100%;
-  min-height:78px;
-  resize:vertical;
-}
-.deploy-notes-admin-list{
-  margin-top:10px;
-}
-.deploy-note-card{
-  margin-top:8px;
-  padding:12px;
-  border:1px solid rgba(243,234,211,.10);
-  background:rgba(0,0,0,.10);
-}
-.deploy-note-card-text{
-  white-space:pre-wrap;
-  overflow-wrap:anywhere;
-  line-height:1.5;
-}
-.deploy-note-actions{
-  display:flex;
-  justify-content:flex-end;
-  margin-top:8px;
-}
-.deploy-notice-box{
-  width:100%;
-  margin-bottom:14px;
-}
-.deploy-notice{
-  margin-bottom:10px;
-  padding:14px 15px;
-  border-left:3px solid var(--accent);
-  border-radius:2px;
-  background:rgba(201,138,44,.10);
-}
-.deploy-notice-label{
-  font-family:var(--mono);
-  font-size:9px;
-  letter-spacing:.14em;
-  color:var(--accent);
-  margin-bottom:6px;
-}
-.deploy-notice-text{
-  white-space:pre-wrap;
-  overflow-wrap:anywhere;
-  line-height:1.55;
-}
-@media(max-width:780px){
-  .deploy-note-form{
-    grid-template-columns:1fr;
-  }
-  .deploy-note-input{
-    min-height:90px;
-  }
-  .deploy-notice{
-    padding:12px;
-  }
-}
-
-
-.deploy-sync-status{
-  margin-top:8px;
-  font-family:var(--mono);
-  font-size:9px;
-  color:rgba(243,234,211,.42);
-}
-.deploy-note-actions .admin-btn{
-  min-width:auto;
-  padding:6px 10px;
-}
-
 </style>
-</head>
-<body>
 
-<!-- ===================== MÀN HÌNH ĐĂNG NHẬP ===================== -->
-<div id="loginScreen">
-  <div class="catalog-card">
-    <div class="catalog-eyebrow">Kiên Giang Mãi Đỉnh</div>
-    <h1 class="catalog-title">Bình Nguyên Vô Tận</h1>
-    <p class="catalog-sub">Nhập Họ & Tên + Tỉnh để đăng nhập</p>
-    <form id="loginForm">
-      <div>
-        <label class="field-label" for="codeInput">Nhập họ và tên</label>
-        <input id="codeInput" type="text" autocomplete="name" placeholder="Bắt buộc nhập chỗ này" />
-      </div>
-      <div id="provinceWrap">
-        <label class="field-label" for="provinceInput">Tỉnh đang làm việc</label>
-        <input id="provinceInput" type="text" autocomplete="address-level1" placeholder="Bắt buộc nhập chỗ này" />
-      </div>
-      <div id="passwordWrap">
-        <label class="field-label" for="passwordInput">Không cần nhập chỗ này</label>
-        <input id="passwordInput" type="password" autocomplete="current-password" placeholder="Chỗ này của Admin" />
-      </div>
-      <button id="loginBtn" type="submit">Wellcome</button>
-      <div id="loginError"></div>
-    </form>
-  </div>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<div class="wrap">
+  <header class="hdr" id="hdr"></header>
+  <main id="main"></main>
 </div>
+<div id="toasts" aria-live="polite"></div>
 
-<!-- ===================== TRANG CHÍNH ===================== -->
-<div id="mainScreen">
-  <div class="topbar">
-    <div class="brand">
-      <span class="brand-mark">LIB</span>
-      <span class="brand-name">Bình Nguyên Vô Tận</span>
-    </div>
-    <div class="who">
-      <span id="whoName">—</span>
-      <button id="adminToggleBtn" type="button" style="display:none;background:none;border:1px solid rgba(243,234,211,.3);color:var(--card);padding:6px 12px;border-radius:2px;font-size:12px;">Quản trị</button>
-      <button id="logoutBtn">Đăng xuất</button>
-    </div>
-  </div>
-
-  <div class="layout">
-    <nav class="drawer">
-      <div class="drawer-label">Danh mục</div>
-      <div id="tabList"></div>
-    </nav>
-
-    <main class="content">
-      <div class="content-header" style="display:none;">
-        <div class="content-eyebrow" id="catEyebrow">Danh mục</div>
-        <h2 class="content-title" id="catTitle">—</h2>
-        <p class="content-desc" id="catDesc"></p>
-      </div>
-      <section id="adminPanel">
-        <div class="admin-head">
-        <span id="ruleSyncStatus" class="sync-status">Đồng bộ Google Sheet</span>
-          <div>
-            <h3 class="admin-title">⚙ Quản trị Rule</h3>
-            <p class="admin-sub">Thêm, sửa hoặc xoá Rule. Tên Rule sẽ là nút bấm và dẫn tới link bạn nhập.</p>
-          </div>
-          <button id="closeAdminBtn" class="admin-btn secondary" type="button">Ẩn</button>
-        </div>
-        <form id="adminRuleForm" class="admin-form">
-          <input id="ruleNameInput" class="admin-input" type="text" placeholder="Tên Rule" required />
-          <input id="ruleUrlInput" class="admin-input" type="url" placeholder="https://example.com/..." required />
-          <select id="ruleCategoryInput" class="admin-input" required>
-            <option value="phone">📱 Điện thoại</option>
-            <option value="tablet">▣ Tablet</option>
-            <option value="ce">◈ CE</option>
-            <option value="other">📦 SP Khác</option>
-            <option value="tips">💡 Mẹo vặt</option>
-            <option value="deploy">📢 Triển khai</option>
-          </select>
-          <button id="saveRuleBtn" class="admin-btn" type="submit">Thêm Rule</button>
-        </form>
-        <div id="adminRuleList" class="admin-list"></div>
-        <section id="deployAdminPanel" class="deploy-admin-panel" style="display:none;">
-          <div class="deploy-admin-title">📢 Quản trị Triển khai</div>
-          <div class="deploy-admin-desc">Ghi chú nhanh cho User. Nội dung sẽ hiển thị như thông báo.</div>
-          <form id="deployNoteForm" class="deploy-note-form">
-            <textarea id="deployNoteInput" class="admin-input deploy-note-input"
-              placeholder="Ví dụ: Triển khai chương trình mới từ ngày 18/08..." rows="3" required></textarea>
-            <button class="admin-btn" type="submit">Thêm thông báo</button>
-          </form>
-          <div id="deploySyncStatus" class="deploy-sync-status">Đang tải thông báo...</div>
-          <div id="deployNotesAdminList" class="deploy-notes-admin-list"></div>
-        </section>
-      </section>
-      <section class="quick-search-panel">
-        <div class="quick-search-title">Tìm kiếm nhanh</div>
-        <div class="quick-search-row">
-          <input id="quickSearchInput" type="search" autocomplete="off"
-                 placeholder="Nhập tên Rule hoặc từ khóa liên quan..." />
-        </div>
-        <div class="quick-search-hint">Kết quả liên quan sẽ hiện ngay trong Danh mục.</div>
-        <div id="quickResults" class="quick-results"></div>
-      </section>
-      <div class="card-grid" id="itemGrid"></div>
-    </main>
-  </div>
-  <div class="footnote">Xiaomi Training Team - Mekong South</div>
-</div>
-
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-/* ======================================================================
-   ⚙️ CONFIG — CHỈNH SỬA Ở ĐÂY LÀ ĐỦ, KHÔNG CẦN SỬA CODE PHÍA DƯỚI
-   ====================================================================== */
+(function(){
+const MAX = 20;
+const $ = (s, r) => (r || document).querySelector(s);
+function el(tag, attrs, ...kids){
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})){
+    if (v == null || v === false) continue;
+    if (k === 'class') n.className = v;
+    else if (k === 'text') n.textContent = v;
+    else if (k === 'value') n.value = v;
+    else if (k === 'checked') n.checked = true;
+    else if (k === 'disabled') n.disabled = true;
+    else if (k.slice(0,2) === 'on') n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v === true ? '' : v);
+  }
+  kids.flat(Infinity).forEach(c => { if (c == null || c === false) return; n.append(c.nodeType ? c : document.createTextNode(String(c))); });
+  return n;
+}
+function toast(msg){
+  const t = el('div', {class:'toast', text:msg});
+  $('#toasts').append(t);
+  setTimeout(() => t.remove(), 3200);
+}
+const fmt = ms => (ms / 1000).toFixed(1) + 's';
+const newId = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+function store(k, v){ try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch(e){ return null; } }
 
-/* ----------------------------------------------------------------------
-   1) DANH SÁCH MÃ TRUY CẬP
-   - Thêm / xoá người dùng bằng cách thêm / xoá dòng { code, name } bên dưới.
-   - "code" là mã người dùng phải nhập để vào xem tài liệu (không phân biệt
-      hoa/thường, tự động bỏ khoảng trắng thừa).
-   - Sau khi sửa xong, chỉ cần upload lại file index.html này lên server
-     là danh sách được cập nhật ngay.
-   ---------------------------------------------------------------------- */
-const ACCESS_CODES = [
-  { code: "SV001", name: "Nguyễn Văn A" },
-  { code: "SV002", name: "Trần Thị B" },
-  { code: "SV003", name: "Lê Văn C" },
-];
-
-const ADMIN_ACCOUNT = {
-  username: "chong",
-  password: "P@ssw0rd",
-  name: "Quản trị viên"
+const S = {
+  booted:false, db:null, uid:null, isAdmin:false, mode:(location.hash === '#choi' ? 'play' : 'admin'), tab:'ctrl',
+  main:{round:1, status:'lobby'}, cfg:{questions:[], prizes:[]}, players:[], history:[],
+  loaded:{main:false, cfg:false, players:false}, slow:false, err:null,
+  full:false, nameDraft:store('quiz_name') || '', urlDraft:null,
+  draftQ:null, dirtyQ:false, draftP:null, dirtyP:false,
+  qStart:0, qLocked:false, tick:null, chain:Promise.resolve(), busy:false, resetArmed:false,
+  lastKey:null, force:false, pending:false, qr:null
 };
 
-/* ----------------------------------------------------------------------
-   2) DANH MỤC & TÀI LIỆU (SẢN PHẨM)
-   - Mỗi phần tử trong CATEGORIES là một "rule/danh mục" hiện ở cột trái.
-   - Bấm vào danh mục sẽ hiện các "items" (tài liệu) tương ứng bên phải.
-   - "file": đường dẫn tới file thật (pdf, docx, pptx, xlsx, link Drive...).
-      => Nhớ tải file đó lên đúng đường dẫn này trên server / cùng thư mục
-         với index.html (ví dụ thư mục "files/").
-   - "type": nhãn hiển thị góc thẻ, ví dụ "PDF", "DOCX", "VIDEO", "LINK".
-   ---------------------------------------------------------------------- */
-const CATEGORIES = []; /* Danh mục cũ giữ trống; hệ thống mới dùng PARENT_CATEGORIES + Rule từ Google Sheet. */
-
-/* ======================================================================
-   ⬇️ TỪ ĐÂY TRỞ XUỐNG LÀ LOGIC HOẠT ĐỘNG — KHÔNG CẦN CHỈNH
-   ====================================================================== */
-
-
-const ACCESS_LOG_API_URL = "https://script.google.com/macros/s/AKfycby8MJRATyY7vtSwpdjm3pYphUJtRXTB4Bi1pndct_0WVCSjEpHlX-yCh02mS5cax9vM/exec";
-
-const ACCESS_DATA_SHEET_RULE = {
-  name: "Dữ liệu truy cập",
-  url: "https://docs.google.com/spreadsheets/d/1LUTParmZ-MqQlV--W-1JEOgAFS9aqgZazqfy3rxNAjg/edit?gid=0#gid=0"
-};
-
-const RULES_STORAGE_KEY = "library_admin_rules_v1";
-let editingRuleIndex = -1;
-let adminRules = loadAdminRules();
-const DEPLOY_CACHE_KEY = "library_deploy_notes_v1";
-let deployNotes = loadDeployNotesCache();
-
-
-function loadDeployNotesCache(){
-  try{
-    const raw = localStorage.getItem(DEPLOY_CACHE_KEY);
-    const data = raw ? JSON.parse(raw) : [];
-    return Array.isArray(data) ? data : [];
-  }catch(e){
-    return [];
-  }
+/* ---------- derived ---------- */
+function cmp(a, b){ return (b.correct - a.correct) || (a.timeMs - b.timeMs) || (a.joinedAt - b.joinedAt); }
+function roundPlayers(){
+  return S.players.filter(p => p.round === S.main.round)
+    .sort((a, b) => (a.joinedAt - b.joinedAt) || (a.uid < b.uid ? -1 : 1));
+}
+const validPlayers = () => roundPlayers().slice(0, MAX);
+const ranked = () => validPlayers().sort(cmp);
+const getMe = () => validPlayers().find(p => p.uid === S.uid);
+const totalQ = () => S.cfg.questions.length;
+const isDone = p => p.finished || (p.answers.length >= totalQ() && totalQ() > 0);
+function pickPhase(){
+  const vp = validPlayers();
+  return S.main.status === 'results' || (S.main.status === 'running' && vp.length > 0 && vp.every(isDone));
+}
+function turnInfo(){
+  const rk = ranked();
+  const claimed = new Set(rk.map(p => p.prizeId).filter(Boolean));
+  const available = S.cfg.prizes.filter(z => !claimed.has(z.id));
+  const turn = available.length ? (rk.find(p => !p.prizeId && !p.skipped) || null) : null;
+  return {rk, available, turn};
+}
+const prizeName = id => { const z = S.cfg.prizes.find(x => x.id === id); return z ? z.name : 'Quà đã xóa'; };
+function statusLabel(){
+  if (S.main.status === 'lobby') return ['lobby', 'Chờ bắt đầu'];
+  if (pickPhase()) return ['pick', 'Chọn quà'];
+  return ['running', 'Đang chơi'];
 }
 
-function saveDeployNotesCache(){
-  try{
-    localStorage.setItem(DEPLOY_CACHE_KEY, JSON.stringify(deployNotes));
-  }catch(e){}
-}
-
-function loadAdminRules(){
-  try{
-    const raw = localStorage.getItem(RULES_STORAGE_KEY);
-    const data = raw ? JSON.parse(raw) : [];
-    return Array.isArray(data) ? data : [];
-  }catch(e){ return []; }
-}
-
-function saveAdminRules(){
-  try{ localStorage.setItem(RULES_STORAGE_KEY, JSON.stringify(adminRules)); }
-  catch(e){ alert("Không thể lưu Rule trên trình duyệt này."); }
-}
-
-/* ===== ĐỒNG BỘ RULE GIỮA LAPTOP + ĐIỆN THOẠI ===== */
-function makeRuleId(name, url){
-  const str = String(name || "") + "|" + String(url || "");
-  let hash = 0;
-  for(let i=0;i<str.length;i++){
-    hash = ((hash << 5) - hash) + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return "r_" + Math.abs(hash) + "_" + str.length;
-}
-
-
-function apiGetDeployNotes(){
-  return new Promise((resolve, reject) => {
-    const callbackName = "__deployRead_" + Date.now() + "_" +
-      Math.random().toString(36).slice(2);
-    const script = document.createElement("script");
-    let finished = false;
-
-    const cleanup = () => {
-      clearTimeout(timer);
-      try { delete window[callbackName]; } catch(e) {}
-      if (script.parentNode) script.parentNode.removeChild(script);
-    };
-
-    const done = (ok, value) => {
-      if (finished) return;
-      finished = true;
-      cleanup();
-      ok ? resolve(value) : reject(value);
-    };
-
-    const timer = setTimeout(
-      () => done(false, new Error("Không tải được thông báo.")),
-      15000
-    );
-
-    window[callbackName] = data => {
-      if (data && data.success && Array.isArray(data.notes)) {
-        done(true, data.notes);
-      } else {
-        done(false, new Error("Dữ liệu thông báo không hợp lệ."));
-      }
-    };
-
-    script.onerror = () =>
-      done(false, new Error("Không kết nối được Apps Script."));
-
-    script.src =
-      ACCESS_LOG_API_URL +
-      "?action=getDeployNotes&callback=" +
-      encodeURIComponent(callbackName) +
-      "&ts=" + Date.now();
-
-    document.head.appendChild(script);
-  });
-}
-
-async function syncDeployNotesFromServer(){
-  const status = document.getElementById("deploySyncStatus");
-
-  try{
-    if (status) status.textContent = "Đang tải thông báo từ Google Sheet...";
-
-    const serverNotes = await apiGetDeployNotes();
-
-    if (Array.isArray(serverNotes)){
-      deployNotes = serverNotes;
-      saveDeployNotesCache();
-    }
-
-    renderDeployNotesAdmin();
-    renderRuleLinks();
-    updateDeployAdminPanel();
-    renderDeployNotices();
-
-    if (status){
-      status.textContent =
-        "Đã đồng bộ " + deployNotes.length + " thông báo.";
-    }
-  }catch(e){
-    console.warn("Không tải được thông báo Triển khai:", e);
-
-    if (status){
-      status.textContent =
-        "Không tải được thông báo từ máy chủ. Hãy kiểm tra Apps Script đã Deploy bản mới.";
-    }
-
-    renderDeployNotesAdmin();
-    renderRuleLinks();
-    renderDeployNotices();
-  }
-}
-
-function renderDeployNotices(){
-  const content = document.querySelector(".content");
-  if (!content) return;
-
-  let box = document.getElementById("deployNoticeBox");
-
-  if (!box){
-    box = document.createElement("div");
-    box.id = "deployNoticeBox";
-    box.className = "deploy-notice-box";
-
-    const searchPanel = content.querySelector(".quick-search-panel");
-    if (searchPanel) content.insertBefore(box, searchPanel);
-    else content.prepend(box);
-  }
-
-  box.innerHTML = "";
-
-  /* User chỉ cần mở thư mục Triển khai là thấy toàn bộ thông báo. */
-  if (activeCategoryId !== "deploy"){
-    box.style.display = "none";
-    return;
-  }
-
-  if (!deployNotes.length){
-    box.style.display = "block";
-    box.innerHTML =
-      '<div class="deploy-notice">' +
-      '<div class="deploy-notice-label">📢 TRIỂN KHAI</div>' +
-      '<div class="deploy-notice-text">Chưa có thông báo triển khai.</div>' +
-      '</div>';
-    return;
-  }
-
-  box.style.display = "block";
-
-  deployNotes.forEach(note => {
-    const item = document.createElement("div");
-    item.className = "deploy-notice";
-
-    const label = document.createElement("div");
-    label.className = "deploy-notice-label";
-    label.textContent = "📢 THÔNG BÁO TRIỂN KHAI";
-
-    const text = document.createElement("div");
-    text.className = "deploy-notice-text";
-    text.textContent = note.content;
-
-    item.appendChild(label);
-    item.appendChild(text);
-    box.appendChild(item);
-  });
-}
-
-function renderDeployNotesAdmin(){
-  const list = document.getElementById("deployNotesAdminList");
-  if (!list) return;
-
-  list.innerHTML = "";
-
-  if (!deployNotes.length){
-    list.innerHTML =
-      '<div class="admin-sub">Chưa có thông báo nào.</div>';
-    return;
-  }
-
-  deployNotes.forEach(note => {
-    const card = document.createElement("div");
-    card.className = "deploy-note-card";
-
-    const text = document.createElement("div");
-    text.className = "deploy-note-card-text";
-    text.textContent = note.content;
-
-    const actions = document.createElement("div");
-    actions.className = "deploy-note-actions";
-
-    const edit = document.createElement("button");
-    edit.type = "button";
-    edit.className = "admin-btn secondary";
-    edit.textContent = "Sửa";
-
-    edit.addEventListener("click", () => {
-      const input = document.getElementById("deployNoteInput");
-      if (input){
-        input.value = note.content;
-        input.dataset.editingId = note.id;
-        input.focus();
-      }
-      const btn = document.querySelector("#deployNoteForm button[type=submit]");
-      if (btn) btn.textContent = "Lưu thông báo";
-    });
-
-    const del = document.createElement("button");
-    del.type = "button";
-    del.className = "delete-rule";
-    del.textContent = "Xóa";
-
-    del.addEventListener("click", async () => {
-      if (!confirm("Xóa thông báo này?")) return;
-
-      const ok = await apiPostRule({
-        action:"deleteDeployNote",
-        id:note.id
-      });
-
-      if (ok){
-        await syncDeployNotesFromServer();
-      }else{
-        alert("Không thể xóa thông báo. Hãy kiểm tra Apps Script đã Deploy bản mới.");
-      }
-    });
-
-    actions.appendChild(edit);
-    actions.appendChild(del);
-    card.appendChild(text);
-    card.appendChild(actions);
-    list.appendChild(card);
-  });
-}
-
-function updateDeployAdminPanel(){
-  const panel = document.getElementById("deployAdminPanel");
-  if (!panel) return;
-
-  /*
-    Admin đã mở khu vực Quản trị thì luôn được thấy phần
-    Triển khai để thêm / sửa / xoá thông báo, không phụ thuộc
-    đang chọn thư mục nào ở cột Danh mục.
-  */
-  panel.style.display = isAdmin(currentUser) ? "block" : "none";
-}
-
-function apiGetRules(){
-  /*
-    Google Apps Script thường redirect sang googleusercontent.
-    Trên điện thoại, fetch() đọc JSON cross-origin có thể bị CORS chặn.
-    Dùng JSONP cho thao tác ĐỌC Rule để chạy ổn định trên GitHub Pages.
-  */
-  return new Promise((resolve, reject) => {
-    const callbackName = "__rulesCallback_" + Date.now() + "_" +
-      Math.random().toString(36).slice(2);
-
-    const script = document.createElement("script");
-    let finished = false;
-
-    const cleanup = () => {
-      try { delete window[callbackName]; } catch(e) { window[callbackName] = undefined; }
-      if (script.parentNode) script.parentNode.removeChild(script);
-    };
-
-    const timer = setTimeout(() => {
-      if (finished) return;
-      finished = true;
-      cleanup();
-      reject(new Error("Không tải được danh sách Rule từ máy chủ."));
-    }, 15000);
-
-    window[callbackName] = (data) => {
-      if (finished) return;
-      finished = true;
-      clearTimeout(timer);
-      cleanup();
-
-      if (!data || !data.success || !Array.isArray(data.rules)) {
-        reject(new Error("Dữ liệu Rule từ máy chủ không hợp lệ."));
-        return;
-      }
-
-      resolve(data.rules);
-    };
-
-    script.onerror = () => {
-      if (finished) return;
-      finished = true;
-      clearTimeout(timer);
-      cleanup();
-      reject(new Error("Không kết nối được Google Apps Script."));
-    };
-
-    script.src =
-      ACCESS_LOG_API_URL +
-      "?action=getRules&callback=" +
-      encodeURIComponent(callbackName) +
-      "&ts=" + Date.now();
-
-    document.head.appendChild(script);
-  });
-}
-
-function apiPostRule(payload){
-  /*
-    Ghi dữ liệu bằng GET + JSONP.
-    Có timestamp để Google/browser không dùng cache cũ.
-  */
-  return new Promise((resolve) => {
-    const callbackName = "__apiWrite_" + Date.now() + "_" +
-      Math.random().toString(36).slice(2);
-
-    const script = document.createElement("script");
-    let finished = false;
-
-    const cleanup = () => {
-      clearTimeout(timer);
-      try { delete window[callbackName]; } catch(e) {}
-      if (script.parentNode) script.parentNode.removeChild(script);
-    };
-
-    const done = (ok) => {
-      if (finished) return;
-      finished = true;
-      cleanup();
-      resolve(ok);
-    };
-
-    const timer = setTimeout(() => done(false), 20000);
-
-    window[callbackName] = (data) => {
-      done(!!(data && data.success));
-    };
-
-    script.onerror = () => done(false);
-
-    const params = new URLSearchParams();
-    params.set("action", payload.action || "");
-    params.set("callback", callbackName);
-    params.set("_ts", String(Date.now()));
-
-    Object.keys(payload).forEach(key => {
-      if (key === "action") return;
-      if (payload[key] !== undefined && payload[key] !== null) {
-        params.set(key, String(payload[key]));
-      }
-    });
-
-    script.src = ACCESS_LOG_API_URL + "?" + params.toString();
-    document.head.appendChild(script);
-  });
-}
-
-async function syncRulesFromServer(){
-  try{
-    const serverRules = await apiGetRules();
-
-    const normalizedServerRules = serverRules.map(rule => ({
-      id: rule.id || makeRuleId(rule.name, rule.url),
-      name: rule.name || "",
-      url: rule.url || "",
-      categoryId: rule.categoryId || "phone",
-      categoryName: rule.categoryName || "Điện thoại"
-    })).filter(rule => rule.name && rule.url);
-
-    /*
-      Nếu server thật sự có Rule thì dùng danh sách server.
-      Nếu server tạm thời trả rỗng, không xóa Rule đang có ở Admin.
-    */
-    if (normalizedServerRules.length){
-      adminRules = normalizedServerRules;
-      saveAdminRules();
-    } else {
-      /* Server chưa có Rule: giữ Rule hiện có trên máy và để Admin đẩy lên. */
-      renderAdminRules();
-      renderRuleLinks();
-      if (isAdmin(currentUser) && adminRules.length){
-        syncLocalRulesToServer();
-      }
-    }
-
-    renderAdminRules();
-    renderRuleLinks();
-
-    const quickInput = document.getElementById("quickSearchInput");
-    if(quickInput){
-      renderQuickSearchResults(quickInput.value);
-      filterSidebarRules(quickInput.value);
-    }
-  }catch(e){
-    console.warn("Không đồng bộ được Rule:", e);
-    renderRuleLinks();
-  }
-}
-
-function syncLocalRulesToServer(){
-  if(!isAdmin(currentUser) || !adminRules.length) return Promise.resolve([]);
-
-  adminRules = adminRules.map(rule => {
-    const category = PARENT_CATEGORIES.find(c => c.id === (rule.categoryId || "phone")) || PARENT_CATEGORIES[0];
-    return {
-      id: rule.id || makeRuleId(rule.name, rule.url),
-      name: rule.name,
-      url: rule.url,
-      categoryId: category.id,
-      categoryName: category.name
-    };
-  });
-
-  saveAdminRules();
-
-  const status = document.getElementById("ruleSyncStatus");
-  if (status) status.textContent = "Đang đồng bộ Rule...";
-
-  const jobs = adminRules.map(rule => apiPostRule({
-    action:"saveRule",
-    id:rule.id,
-    name:rule.name,
-    url:rule.url,
-    categoryId:rule.categoryId,
-    categoryName:rule.categoryName
-  }));
-
-  return Promise.all(jobs).then(results => {
-    const ok = results.filter(Boolean).length;
-    if (status){
-      status.textContent = ok === adminRules.length
-        ? "Đã đồng bộ " + ok + " Rule"
-        : "Đã gửi " + ok + "/" + adminRules.length + " Rule";
-    }
-    return results;
-  });
-}
-
-function saveRuleToServer(rule){
-  const category = PARENT_CATEGORIES.find(c => c.id === (rule.categoryId || "phone")) || PARENT_CATEGORIES[0];
-
-  const promise = apiPostRule({
-    action:"saveRule",
-    id:rule.id || makeRuleId(rule.name, rule.url),
-    name:rule.name,
-    url:rule.url,
-    categoryId:category.id,
-    categoryName:category.name
-  });
-
-  promise.then(ok => {
-    const el = document.getElementById("ruleSyncStatus");
-    if (el){
-      el.textContent = ok ? "Đã gửi Rule lên Google Sheet" : "Chưa gửi được Rule";
-    }
-  });
-
-  return promise;
-}
-
-function deleteRuleFromServer(rule){
-  if(!rule) return;
-  return apiPostRule({
-    action:"deleteRule",
-    id:rule.id || makeRuleId(rule.name, rule.url)
-  });
-}
-
-function isAdmin(user){
-  return !!user && user.role === "admin";
-}
-
-function renderAdminRules(){
-  const list = document.getElementById("adminRuleList");
-  if (!list) return;
-  list.innerHTML = "";
-
-  if (!adminRules.length){
-    list.innerHTML = '<div class="admin-sub">Chưa có Rule nào.</div>';
-    return;
-  }
-
-  adminRules.forEach((rule, index) => {
-    const row = document.createElement("div");
-    row.className = "admin-rule";
-
-    const name = document.createElement("div");
-    name.className = "admin-rule-name";
-    name.textContent = rule.name;
-
-    const url = document.createElement("div");
-    url.className = "admin-rule-url";
-    url.textContent = rule.url;
-
-    const actions = document.createElement("div");
-    actions.className = "admin-actions";
-
-    const edit = document.createElement("button");
-    edit.type = "button";
-    edit.textContent = "Sửa";
-    edit.addEventListener("click", () => startEditRule(index));
-
-    const del = document.createElement("button");
-    del.type = "button";
-    del.className = "delete-rule";
-    del.textContent = "Xoá";
-    del.addEventListener("click", () => deleteRule(index));
-
-    actions.appendChild(edit);
-    actions.appendChild(del);
-    row.appendChild(name);
-    row.appendChild(url);
-    row.appendChild(actions);
-    list.appendChild(row);
-  });
-}
-
-
-
-/* Gửi dữ liệu truy cập về Google Apps Script -> Google Sheet.
-   Dùng text/plain để tránh CORS preflight trên GitHub Pages. */
-function trackAccess(type, ruleName, ruleUrl){
-  if (!currentUser || !currentUser.name || !currentUser.province) return;
-  if (isAdmin(currentUser)) return; // Không ghi lượt truy cập của Admin.
-
-  const payload = {
-    name: currentUser.name,
-    province: currentUser.province,
-    type: type || "USER_LOGIN",
-    rule: ruleName || "",
-    ruleUrl: ruleUrl || "",
-    timestamp: new Date().toISOString(),
-    page: window.location.href
-  };
-
-  try{
-    const body = JSON.stringify(payload);
-
-    if (navigator.sendBeacon){
-      const blob = new Blob([body], {type:"text/plain;charset=UTF-8"});
-      const queued = navigator.sendBeacon(ACCESS_LOG_API_URL, blob);
-      if (queued) return;
-    }
-
-    fetch(ACCESS_LOG_API_URL, {
-      method:"POST",
-      mode:"no-cors",
-      headers:{"Content-Type":"text/plain;charset=UTF-8"},
-      body:body,
-      keepalive:true
-    }).catch(() => {});
-  }catch(e){
-    console.warn("Không thể gửi dữ liệu truy cập:", e);
-  }
-}
-
-function getSearchableRules(){
-  const rules = adminRules.map(rule => ({
-    name: rule.name || "",
-    url: rule.url || "",
-    type: "rule",
-    icon: "🔗",
-    adminOnly: false
-  }));
-
-  if (isAdmin(currentUser)){
-    rules.push({
-      name: ACCESS_DATA_SHEET_RULE.name,
-      url: ACCESS_DATA_SHEET_RULE.url,
-      type: "admin",
-      icon: "📊",
-      adminOnly: true
-    });
-  }
-
-  return rules;
-}
-
-function renderQuickSearchResults(query){
-  const box = document.getElementById("quickResults");
-  if (!box) return;
-
-  const q = (query || "").trim().toLowerCase();
-
-  if (!q){
-    box.innerHTML = "";
-    box.classList.remove("show");
-    return;
-  }
-
-  const results = getSearchableRules().filter(rule =>
-    rule.name.toLowerCase().includes(q) ||
-    rule.url.toLowerCase().includes(q)
+/* ---------- views ---------- */
+function renderHeader(){
+  const hdr = $('#hdr');
+  const [cls, label] = statusLabel();
+  hdr.replaceChildren(
+    el('div', {class:'brand'}, el('div', {class:'mark', text:'?'}), el('b', {text:'Đố Vui Nội Bộ'})),
+    el('div', {class:'hdr-r'},
+      S.booted && S.db ? el('span', {class:'pill ' + cls}, el('i'), 'Lượt ' + S.main.round + ' · ' + label) : null,
+      S.isAdmin ? el('div', {class:'seg'},
+        el('button', {type:'button', 'aria-pressed': String(S.mode === 'admin'), text:'Quản trị', onclick:() => { S.mode = 'admin'; render(); }}),
+        el('button', {type:'button', 'aria-pressed': String(S.mode === 'play'), text:'Xem như người chơi', onclick:() => { S.mode = 'play'; render(); }})
+      ) : null
+    )
   );
+}
 
-  box.innerHTML = "";
-  box.classList.add("show");
+function computeView(){
+  if (!S.booted) return {key:'load', build:loadingView};
+  if (!S.db) return {key:'nodb', build:() => msgCard('Không kết nối được dữ liệu', 'Kiểm tra lại cấu hình Firebase SDK.')};
+  if (!(S.loaded.main && S.loaded.cfg && S.loaded.players)) return {key:'load', build:loadingView};
+  if (S.isAdmin && S.mode === 'admin') return {key:'admin:' + S.tab, stat:(S.tab === 'q' || S.tab === 'p'), build:adminView};
+  return playerView();
+}
 
-  if (!results.length){
-    box.innerHTML = '<div class="quick-result-empty">Không tìm thấy Rule phù hợp.</div>';
-    return;
+function loadingView(){
+  return el('div', {class:'col'}, el('div', {class:'panel'},
+    el('h3', {text:'Đang tải…'}),
+    S.slow ? el('p', {class:'muted', text:'Chưa kết nối được dữ liệu. Kiểm tra mạng, app sẽ tự tải khi kết nối lại.'}) : null));
+}
+function msgCard(title, body, extra){
+  return el('div', {class:'col'}, el('div', {class:'panel'}, el('h2', {text:title}), body ? el('p', {class:'muted', text:body}) : null, extra));
+}
+
+/* ---- player ---- */
+function playerView(){
+  if (!S.uid) return {key:'noid', build:() => msgCard('Không nhận diện được tài khoản', 'Đăng nhập tài khoản đã được chia sẻ app rồi mở lại.')};
+  const me = getMe();
+  const st = S.main.status;
+  if (!me){
+    if (S.full) return {key:'full', build:() => msgCard('Lượt chơi đã đủ ' + MAX + ' người', 'Mỗi lượt chỉ nhận tối đa ' + MAX + ' người. Bạn có thể chờ lượt sau.', el('button', {class:'btn', type:'button', text:'Thử vào lại', onclick:() => { S.full = false; render(); }}))};
+    if (st !== 'lobby') return {key:'closed:' + st, build:() => msgCard(st === 'running' ? 'Lượt chơi đã bắt đầu' : 'Lượt chơi đã kết thúc', 'Bạn chưa vào kịp lượt này. Giữ trang mở, khi có lượt mới bạn sẽ thấy màn hình nhập tên.')};
+    return {key:'join:' + S.main.round, stat:true, build:joinView};
+  }
+  if (st === 'lobby') return {key:'lobby', build:() => lobbyView(me)};
+  if (pickPhase()) return {key:'pick', build:() => resultsView(me)};
+  if (isDone(me)) return {key:'wait', build:() => waitView(me)};
+  if (!totalQ()) return {key:'noq', build:() => msgCard('Chưa có câu hỏi', 'Quản trị viên chưa soạn câu hỏi.')};
+  const idx = me.answers.length;
+  return {key:'q:' + S.main.round + ':' + idx, stat:true, build:() => questionView(me, idx), after:startTimer};
+}
+
+function joinView(){
+  const count = validPlayers().length;
+  const input = el('input', {type:'text', id:'name', maxlength:40, placeholder:'Ví dụ: Nguyễn Văn An', autocomplete:'name', value:S.nameDraft, oninput:e => { S.nameDraft = e.target.value; }});
+  const err = el('p', {class:'small', style:'color:var(--bad)'});
+  const form = el('form', {class:'panel', onsubmit:async e => {
+    e.preventDefault();
+    const name = S.nameDraft.trim().replace(/\s+/g, ' ');
+    if (name.length < 2){ err.textContent = 'Hãy nhập họ tên đầy đủ (ít nhất 2 ký tự).'; return; }
+    if (validPlayers().some(p => p.name.toLowerCase() === name.toLowerCase())){ err.textContent = 'Đã có người dùng tên này. Thêm tên đệm hoặc số để phân biệt.'; return; }
+    if (validPlayers().length >= MAX){ err.textContent = 'Lượt chơi đã đủ ' + MAX + ' người.'; return; }
+    err.textContent = '';
+    store('quiz_name', name);
+    try {
+      await S.db.doc('players/' + S.uid).set({round:S.main.round, name, joinedAt:Date.now(), answers:[], correct:0, timeMs:0, finished:false, prizeId:'', skipped:false});
+    } catch(ex){ err.textContent = 'Không vào được phòng. Kiểm tra mạng rồi thử lại.'; }
+  }},
+    el('label', {class:'f', for:'name'}, 'Họ và tên', input),
+    err,
+    el('button', {class:'btn primary block', type:'submit', text:'Vào phòng chờ'}));
+  return el('div', {class:'col'},
+    el('div', {class:'hero'}, el('h2', {text:'Tham gia lượt chơi'}), el('p', {class:'muted', text:count + '/' + MAX + ' người đã vào phòng'})),
+    form,
+    // THÊM NÚT VÀ BẢO MẬT BẰNG MẬT KHẨU
+    el('div', {style:'text-align:center; margin-top:20px'},
+      el('button', {
+        class:'btn sm', 
+        type:'button', 
+        style:'background:transparent; border:none; color:var(--muted); text-decoration:underline', 
+        text:'Vào trang Quản trị (Admin)', 
+        onclick:() => { 
+          if (sessionStorage.getItem('admin_auth') === '1') {
+            S.isAdmin = true; S.mode = 'admin'; location.hash = 'admin'; render();
+          } else {
+            const pass = prompt('Nhập mật khẩu Quản trị viên:');
+            if (pass === 'Xiaomi@123') {
+              sessionStorage.setItem('admin_auth', '1');
+              S.isAdmin = true; S.mode = 'admin'; location.hash = 'admin'; render();
+              toast('Đăng nhập Quản trị thành công!');
+            } else if (pass !== null) {
+              toast('Mật khẩu không chính xác!');
+            }
+          }
+        }
+      })
+    )
+  );
+}
+
+function lobbyView(me){
+  const vp = validPlayers();
+  return el('div', {class:'col'},
+    el('div', {class:'hero'},
+      el('h2', {text:'Xin chào, ' + me.name}),
+      el('p', {class:'muted', text:'Bạn đã vào phòng. Chờ quản trị viên bấm bắt đầu, câu hỏi sẽ hiện ra tự động.'})),
+    el('div', {class:'panel'},
+      el('div', {class:'qmeta'}, el('span', {text:'Người chơi trong phòng'}), el('span', {text:vp.length + '/' + MAX})),
+      el('div', {class:'chips'}, vp.map(p => el('span', {class:'chip' + (p.uid === S.uid ? ' me' : ''), text:p.name})))),
+    el('p', {class:'muted small', style:'text-align:center', text:'Xếp hạng theo số câu đúng, nếu bằng nhau thì ai tổng thời gian trả lời ít hơn sẽ xếp trên.'}));
+}
+
+function questionView(me, idx){
+  const q = S.cfg.questions[idx];
+  S.qStart = Date.now(); S.qLocked = false; S.curQ = q;
+  const btns = q.options.map((o, i) => el('button', {class:'opt', type:'button', onclick:ev => choose(q, i, ev.currentTarget)},
+    el('span', {class:'l', text:'ABCD'[i]}), el('span', {text:o})));
+  return el('div', {class:'col'},
+    el('div', {class:'qmeta'}, el('span', {text:'Câu ' + (idx + 1) + '/' + totalQ()}), el('span', {class:'tsec', id:'tsec', text:q.time + 's'})),
+    el('div', {class:'tbar'}, el('div', {class:'tfill', id:'tfill'})),
+    el('h2', {class:'qtext', text:q.text}),
+    el('div', {class:'opts', id:'opts'}, btns));
+}
+
+function startTimer(){
+  const q = S.curQ; if (!q) return;
+  const duration = q.time * 1000;
+  const fill = $('#tfill');
+
+  // 1. Giao việc thu ngắn thanh Progress Bar cho CSS Transition xử lý
+  if (fill) {
+    fill.style.transition = `transform ${q.time}s linear, background-color 0.3s`;
+    // Ép trình duyệt nhận diện trạng thái đầy trước khi chạy animation lùi về 0
+    requestAnimationFrame(() => {
+      fill.style.transform = 'scaleX(0)';
+    });
   }
 
-  results.forEach(rule => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "quick-result-item";
+  // 2. JS chỉ thong thả đếm lùi số mỗi 1 giây (1000ms) thay vì 100ms
+  S.tick = setInterval(() => {
+    const left = duration - (Date.now() - S.qStart);
+    const sec = $('#tsec');
+    
+    if (sec) sec.textContent = Math.max(0, Math.ceil(left / 1000)) + 's';
+    if (fill && left <= 5000) fill.classList.add('low');
 
-    const icon = document.createElement("span");
-    icon.className = "quick-icon";
-    icon.textContent = rule.icon;
-
-    const text = document.createElement("span");
-    text.textContent = rule.name;
-
-    const badge = document.createElement("span");
-    badge.className = "quick-result-badge";
-    badge.textContent = rule.adminOnly ? "ADMIN" : "RULE";
-
-    btn.appendChild(icon);
-    btn.appendChild(text);
-    btn.appendChild(badge);
-
-    btn.addEventListener("click", () => {
-      trackAccess("RULE_CLICK", rule.name, rule.url);
-      window.open(rule.url, "_blank", "noopener,noreferrer");
-    });
-
-    box.appendChild(btn);
-  });
-}
-
-function filterSidebarRules(query){
-  const q = (query || "").trim().toLowerCase();
-
-  document.querySelectorAll("#tabList .category-folder").forEach(folder => {
-    let visible = false;
-
-    folder.querySelectorAll(".dynamic-rule").forEach(btn => {
-      const name = (btn.textContent || "").toLowerCase();
-      const match = !q || name.includes(q);
-      btn.style.display = match ? "flex" : "none";
-      if (match) visible = true;
-    });
-
-    const head = folder.querySelector(".category-head");
-    const children = folder.querySelector(".category-children");
-
-    if (q){
-      folder.style.display = visible ? "block" : "none";
-      if (visible && children) children.style.display = "block";
-    }else{
-      folder.style.display = "block";
-      if (children && head){
-        const id = head.dataset.categoryId;
-        children.style.display = "block";
-      }
+    // Khóa đáp án khi hết giờ
+    if (left <= 0 && !S.qLocked){
+      S.qLocked = true; 
+      clearInterval(S.tick);
+      document.querySelectorAll('#opts .opt').forEach(b => b.disabled = true);
+      submitAnswer({a:-1, c:false, ms:duration});
     }
-  });
-
-  const adminOnly = document.querySelector("#tabList .admin-only-rule");
-  if (adminOnly) adminOnly.style.display = "flex";
+  }, 1000);
 }
 
-function renderRuleLinks(){
-  const list = document.getElementById("tabList");
-  if (!list) return;
+function choose(q, i, btn){
+  if (S.qLocked) return;
+  S.qLocked = true; clearInterval(S.tick);
+  const ms = Math.min(Date.now() - S.qStart, q.time * 1000);
+  btn.classList.add('sel');
+  document.querySelectorAll('#opts .opt').forEach(b => b.disabled = true);
+  setTimeout(() => submitAnswer({a:i, c:i === q.correct, ms}), 350);
+}
+function submitAnswer(item){
+  const me = getMe(); if (!me) return;
+  const answers = [...me.answers, item];
+  const payload = {
+    answers, correct:answers.filter(a => a.c).length, timeMs:answers.reduce((s, a) => s + a.ms, 0),
+    finished:answers.length >= totalQ()
+  };
+  S.chain = S.chain.then(() => S.db.doc('players/' + S.uid).update(payload)).catch(() => toast('Chưa lưu được câu trả lời. Kiểm tra kết nối mạng.'));
+}
 
-  list.innerHTML = "";
+function myScoreBlock(me){
+  const rk = ranked(); const pos = rk.findIndex(p => p.uid === me.uid) + 1;
+  return el('div', {class:'panel', style:'text-align:center; align-items:center'},
+    el('div', {class:'muted', text:'Kết quả của bạn'}),
+    el('div', {class:'big', text:me.correct + '/' + totalQ()}),
+    el('div', {class:'muted', text:'đúng · tổng thời gian ' + fmt(me.timeMs)}),
+    el('span', {class:'tag', text:'Hạng ' + pos + '/' + rk.length}));
+}
+function waitView(me){
+  const vp = validPlayers(); const done = vp.filter(isDone).length;
+  return el('div', {class:'col', style:'max-width:620px'},
+    el('div', {class:'hero'}, el('h2', {text:'Bạn đã hoàn thành!'}), el('p', {class:'muted', text:'Chờ mọi người xong, sau đó sẽ đến lượt chọn quà theo thứ hạng.'})),
+    myScoreBlock(me),
+    el('div', {class:'panel'}, el('div', {class:'qmeta'}, el('span', {text:'Bảng xếp hạng tạm thời'}), el('span', {text:done + '/' + vp.length + ' đã xong'})), leaderboard({})));
+}
+function resultsView(me){
+  const {rk, available, turn} = turnInfo();
+  const pos = rk.findIndex(p => p.uid === me.uid) + 1;
+  let head;
+  if (!S.cfg.prizes.length) head = el('div', {class:'note', text:'Lượt này chưa có phần quà nào.'});
+  else if (me.prizeId) head = el('div', {class:'panel', style:'text-align:center'}, el('div', {class:'muted', text:'Phần quà của bạn'}), el('h2', {text:prizeName(me.prizeId)}));
+  else if (!available.length) head = el('div', {class:'note warn', text:'Rất tiếc, các phần quà đã được chọn hết.'});
+  else if (turn && turn.uid === me.uid){
+    head = el('div', {class:'panel'},
+      el('h2', {text:'Đến lượt bạn chọn quà!'}),
+      el('p', {class:'muted', text:'Bạn xếp hạng ' + pos + '. Chọn một phần quà bên dưới.'}),
+      el('div', {class:'prizes'}, available.map(z => el('button', {class:'prize', type:'button', text:z.name, onclick:() => pickPrize(z.id)}))));
+  } else if (me.skipped) head = el('div', {class:'note warn', text:'Bạn đã bị bỏ qua lượt chọn quà.'});
+  else head = el('div', {class:'note', text:'Bạn xếp hạng ' + pos + '. Đang chờ ' + (turn ? turn.name : 'người khác') + ' chọn quà, đến lượt bạn màn hình sẽ tự hiện.'});
+  return el('div', {class:'col', style:'max-width:620px'},
+    myScoreBlock(me), head,
+    el('div', {class:'panel'}, el('h3', {text:'Bảng xếp hạng'}), leaderboard({pick:true})),
+    S.cfg.prizes.length ? el('div', {class:'panel'}, el('h3', {text:'Phần quà'}),
+      el('div', {class:'chips'}, S.cfg.prizes.map(z => { const owner = rk.find(p => p.prizeId === z.id);
+        return el('span', {class:'chip', style:owner ? 'opacity:.55; text-decoration:line-through' : ''}, z.name + (owner ? ' · ' + owner.name : '')); }))) : null);
+}
+async function pickPrize(id){
+  if (S.busy) return; S.busy = true;
+  try {
+    const snap = await S.db.collection('players').get();
+    const taken = snap.docs.some(d => { const x = d.data(); return x.round === S.main.round && x.prizeId === id; });
+    if (taken){ toast('Phần quà này vừa được chọn. Hãy chọn quà khác.'); return; }
+    await S.db.doc('players/' + S.uid).update({prizeId:id});
+    toast('Đã chọn quà!');
+  } catch(e){ toast('Chưa chọn được quà, thử lại.'); }
+  finally { S.busy = false; }
+}
 
-  PARENT_CATEGORIES.forEach(cat => {
-    const rules = adminRules.filter(rule => (rule.categoryId || "phone") === cat.id);
+/* ---- leaderboard ---- */
+function leaderboard(opts){
+  const {rk, available, turn} = turnInfo();
+  if (!rk.length) return el('p', {class:'empty', text:'Chưa có người chơi nào.'});
+  const total = totalQ();
+  const rows = rk.map((p, i) => {
+    let last;
+    if (opts.pick){
+      if (p.prizeId) last = el('span', {class:'tag ok', text:prizeName(p.prizeId)});
+      else if (p.skipped) last = el('span', {class:'tag', text:'Bỏ qua'});
+      else if (turn && turn.uid === p.uid) last = el('span', {class:'row'}, el('span', {class:'tag turn', text:'Đang chọn…'}),
+        opts.admin ? el('button', {class:'btn sm', type:'button', text:'Bỏ qua', onclick:() => skipPlayer(p.uid)}) : null);
+      else last = el('span', {class:'muted', text:available.length ? 'Chờ' : '—'});
+    } else {
+      last = isDone(p) ? el('span', {class:'tag ok', text:'Đã xong'}) : el('span', {class:'muted', text:p.answers.length + '/' + total});
+    }
+    return el('tr', {class:p.uid === S.uid ? 'me' : ''},
+      el('td', {}, el('span', {class:'rk' + (i < 3 ? ' r' + (i + 1) : ''), text:String(i + 1)})),
+      el('td', {text:p.name + (p.uid === S.uid ? ' (bạn)' : '')}),
+      el('td', {class:'num', text:p.correct + '/' + total}),
+      el('td', {class:'num', text:fmt(p.timeMs)}),
+      el('td', {}, last));
+  });
+  return el('div', {class:'tscroll'}, el('table', {class:'lb'},
+    el('thead', {}, el('tr', {}, el('th', {text:'#'}), el('th', {text:'Họ tên'}), el('th', {class:'num', text:'Đúng'}), el('th', {class:'num', text:'Thời gian'}), el('th', {text:opts.pick ? 'Quà' : 'Trạng thái'}))),
+    el('tbody', {}, rows)));
+}
 
-    const folder = document.createElement("div");
-    folder.className = "category-folder" + (cat.id === activeCategoryId ? " active" : "");
+/* ---- admin ---- */
+function adminView(){
+  const tabs = [['ctrl', 'Điều khiển'], ['q', 'Câu hỏi (' + totalQ() + ')'], ['p', 'Phần quà (' + S.cfg.prizes.length + ')'], ['h', 'Lịch sử']];
+  return el('div', {class:'wrap', style:'gap:16px'},
+    el('div', {class:'tabs', role:'tablist'}, tabs.map(([k, t]) => el('button', {type:'button', role:'tab', 'aria-selected':String(S.tab === k), text:t, onclick:() => { S.tab = k; render(); }}))),
+    S.tab === 'ctrl' ? controlTab() : S.tab === 'q' ? questionsEditor() : S.tab === 'p' ? prizesEditor() : historyTab());
+}
 
-    const head = document.createElement("button");
-    head.type = "button";
-    head.className = "category-head";
-    head.dataset.categoryId = cat.id;
+function qrNode(url){
+  if (S.qr && S.qr.url === url) return S.qr.node;
+  const box = el('div', {class:'qr'});
+  try { new QRCode(box, {text:url, width:208, height:208, colorDark:'#101828', colorLight:'#ffffff', correctLevel:QRCode.CorrectLevel.M}); }
+  catch(e){ box.style.lineHeight = '1.4'; box.textContent = 'Không tạo được mã QR. Dùng đường link bên dưới.'; }
+  S.qr = {url, node:box}; return box;
+}
 
-    const icon = document.createElement("span");
-    icon.className = "ic";
-    icon.textContent = cat.icon;
+function controlTab(){
+  const st = S.main.status, vp = validPlayers(), pick = pickPhase();
+  const url = (S.cfg.shareUrl || location.href).split('#')[0] + '#choi';
+  const canStart = vp.length > 0 && totalQ() > 0;
+  const actions = [];
+  if (st === 'lobby'){
+    actions.push(el('button', {class:'btn primary block', type:'button', disabled:!canStart || S.busy, text:'Bắt đầu lượt chơi', onclick:startRound}));
+  } else if (!pick){
+    actions.push(el('button', {class:'btn block', type:'button', text:'Kết thúc lượt và chốt xếp hạng', onclick:endRound}));
+  }
+  if (st !== 'lobby' || vp.length > 0){
+    if (S.resetArmed){
+      actions.push(el('div', {class:'note bad'}, el('p', {text:'Reset sẽ lưu bảng xếp hạng vào Lịch sử, xóa người chơi và mở lượt ' + (S.main.round + 1) + '.'}),
+        el('div', {class:'row', style:'margin-top:10px'},
+          el('button', {class:'btn danger', type:'button', disabled:S.busy, text:'Xác nhận reset', onclick:resetRound}),
+          el('button', {class:'btn', type:'button', text:'Hủy', onclick:() => { S.resetArmed = false; render(); }}))));
+    } else actions.push(el('button', {class:'btn block', type:'button', text:'Reset và mở lượt mới', onclick:() => { S.resetArmed = true; render(); }}));
+  }
+  const hint = st === 'lobby'
+    ? (!totalQ() ? 'Chưa có câu hỏi: thêm ở tab Câu hỏi.' : !vp.length ? 'Chờ người chơi quét mã QR và nhập tên.' : 'Sẵn sàng. Bấm bắt đầu khi mọi người đã vào.')
+    : pick ? 'Mọi người đã xong. Người chơi đang chọn quà theo thứ hạng.' : vp.filter(isDone).length + '/' + vp.length + ' người đã nộp bài.';
 
-    const name = document.createElement("span");
-    name.className = "category-name";
-    name.textContent = cat.name;
+  const urlInput = el('input', {type:'text', id:'shareurl', value:S.urlDraft != null ? S.urlDraft : url, 'aria-label':'Đường link app', oninput:e => { S.urlDraft = e.target.value; }});
+  const left = el('div', {class:'wrap', style:'gap:16px'},
+    el('section', {class:'panel'},
+      el('h3', {text:'Mã QR vào chơi'}),
+      qrNode(url),
+      el('div', {class:'linkbox', text:url}),
+      el('div', {class:'row'},
+        el('button', {class:'btn sm', type:'button', text:'Sao chép link', onclick:() => { (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(() => toast('Đã sao chép link.')).catch(() => toast('Không sao chép được, hãy chọn link và copy thủ công.')); }})),
+      el('details', {}, el('summary', {class:'small muted', text:'Đổi đường link gốc của mã QR'}),
+        el('div', {class:'row', style:'margin-top:8px; flex-wrap:nowrap'}, urlInput,
+          el('button', {class:'btn sm', type:'button', text:'Lưu', onclick:async () => { try { await saveCfg({shareUrl:(S.urlDraft || '').trim().split('#')[0]}); S.urlDraft = null; toast('Đã cập nhật mã QR.'); } catch(e){ toast('Chưa lưu được link.'); } }}))),
+      el('p', {class:'small muted', text:'Chia sẻ app ở quyền Người đóng góp để người chơi ghi được điểm.'})),
+    el('section', {class:'panel'},
+      el('div', {class:'qmeta'}, el('span', {text:'Lượt ' + S.main.round}), el('span', {text:vp.length + '/' + MAX + ' người'})),
+      el('p', {class:'muted', text:hint}), actions));
+  const right = el('section', {class:'panel'},
+    el('h3', {text:'Bảng xếp hạng lượt ' + S.main.round}),
+    pick && turnInfo().turn ? el('div', {class:'note', text:'Đang chờ ' + turnInfo().turn.name + ' chọn quà. Nếu bạn ấy vắng mặt, bấm Bỏ qua.'}) : null,
+    leaderboard({pick, admin:true}));
+  return el('div', {class:'grid2'}, left, right);
+}
 
-    const count = document.createElement("span");
-    count.className = "ct";
-    count.textContent = (cat.id === "deploy")
-      ? deployNotes.length
-      : rules.length;
-
-    head.appendChild(icon);
-    head.appendChild(name);
-    head.appendChild(count);
-
-    const children = document.createElement("div");
-    children.className = "category-children";
-    children.style.display = (cat.id === activeCategoryId) ? "block" : "none";
-
-    head.addEventListener("click", () => {
-      activeCategoryId = cat.id;
-      renderRuleLinks();
-      updateDeployAdminPanel();
-      renderDeployNotices();
-    });
-
-    folder.appendChild(head);
-
-    rules.forEach(rule => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "rule-link dynamic-rule";
-      btn.title = rule.url;
-
-      const ic = document.createElement("span");
-      ic.className = "ic";
-      ic.textContent = "🔗";
-
-      const text = document.createElement("span");
-      text.textContent = rule.name;
-
-      const badge = document.createElement("span");
-      badge.className = "admin-badge";
-      badge.textContent = "RULE";
-
-      btn.appendChild(ic);
-      btn.appendChild(text);
-      btn.appendChild(badge);
-
-      btn.addEventListener("click", () => {
-        trackAccess("RULE_CLICK", rule.name, rule.url);
-        window.open(rule.url, "_blank", "noopener,noreferrer");
+async function startRound(){
+  if (S.busy) return; S.busy = true;
+  try { await S.db.doc('state/main').set({round:S.main.round, status:'running', startedAt:Date.now()}); }
+  catch(e){ toast('Chưa bắt đầu được, thử lại.'); } finally { S.busy = false; }
+}
+async function endRound(){
+  try { await S.db.doc('state/main').set({round:S.main.round, status:'results', startedAt:S.main.startedAt || 0}); }
+  catch(e){ toast('Chưa kết thúc được lượt.'); }
+}
+async function skipPlayer(uid){
+  try { await S.db.doc('players/' + uid).update({skipped:true}); } catch(e){ toast('Chưa bỏ qua được.'); }
+}
+async function resetRound(){
+  if (S.busy) return; S.busy = true;
+  try {
+    const rk = ranked();
+    if (rk.length){
+      await S.db.doc('history/' + String(S.main.round)).set({
+        round:S.main.round, endedAt:Date.now(),
+        rows:rk.map(p => ({name:p.name, correct:p.correct, total:totalQ(), timeMs:p.timeMs, prize:p.prizeId ? prizeName(p.prizeId) : ''}))
       });
-
-      children.appendChild(btn);
-    });
-
-    if (!rules.length && cat.id !== "deploy"){
-      const empty = document.createElement("div");
-      empty.className = "category-empty";
-      empty.textContent = "Chưa có Rule";
-      children.appendChild(empty);
     }
+    for (const p of S.players) await S.db.doc('players/' + p.uid).delete();
+    await S.db.doc('state/main').set({round:S.main.round + 1, status:'lobby', startedAt:0});
+    S.resetArmed = false; toast('Đã mở lượt mới.');
+  } catch(e){ toast('Reset chưa xong, kiểm tra kết nối rồi thử lại.'); }
+  finally { S.busy = false; render(); }
+}
+async function saveCfg(partial){
+  await S.db.doc('config/main').set({...S.cfg, ...partial});
+}
 
-    if (cat.id === "deploy"){
-      if (deployNotes.length){
-        const noteInfo = document.createElement("div");
-        noteInfo.className = "category-empty";
-        noteInfo.textContent = "📢 " + deployNotes.length + " thông báo — bấm để xem";
-        children.appendChild(noteInfo);
-      }else{
-        const noteInfo = document.createElement("div");
-        noteInfo.className = "category-empty";
-        noteInfo.textContent = "Chưa có thông báo";
-        children.appendChild(noteInfo);
+/* ---- editors ---- */
+const cloneQs = () => S.cfg.questions.map(q => ({id:q.id, text:q.text || '', options:[0, 1, 2, 3].map(k => (q.options || [])[k] || ''), correct:q.correct || 0, time:q.time || 20}));
+const cloneZs = () => S.cfg.prizes.map(z => ({id:z.id, name:z.name || ''}));
+function lockBanner(){ return S.main.status !== 'lobby' ? el('div', {class:'note warn', text:'Lượt đang chơi hoặc đã có kết quả nên không sửa được. Bấm Reset và mở lượt mới ở tab Điều khiển để chỉnh sửa.'}) : null; }
+function forceRender(){ S.force = true; render(); }
+
+function questionsEditor(){
+  if (!S.draftQ) S.draftQ = cloneQs();
+  const locked = S.main.status !== 'lobby';
+  const saveBtn = el('button', {class:'btn primary', type:'button', id:'saveq', disabled:locked || !S.dirtyQ, text:'Lưu câu hỏi', onclick:saveQuestions});
+  const dirty = () => { S.dirtyQ = true; saveBtn.disabled = false; saveBtn.textContent = 'Lưu câu hỏi *'; };
+  const move = (i, d) => { const a = S.draftQ, j = i + d; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; S.dirtyQ = true; forceRender(); };
+  const cards = S.draftQ.map((q, i) => el('section', {class:'qcard'},
+    el('div', {class:'qhead'}, el('strong', {text:'Câu ' + (i + 1)}),
+      el('div', {class:'qtools'},
+        el('button', {class:'btn sm', type:'button', disabled:locked || i === 0, 'aria-label':'Chuyển lên', text:'↑', onclick:() => move(i, -1)}),
+        el('button', {class:'btn sm', type:'button', disabled:locked || i === S.draftQ.length - 1, 'aria-label':'Chuyển xuống', text:'↓', onclick:() => move(i, 1)}),
+        el('button', {class:'btn sm', type:'button', disabled:locked, text:'Xóa', onclick:() => { S.draftQ.splice(i, 1); S.dirtyQ = true; forceRender(); }}))),
+    el('textarea', {rows:2, placeholder:'Nội dung câu hỏi', value:q.text, disabled:locked, 'aria-label':'Nội dung câu ' + (i + 1), oninput:e => { q.text = e.target.value; dirty(); }}),
+    el('div', {class:'wrap', style:'gap:8px'}, [0, 1, 2, 3].map(k => el('label', {class:'optrow'},
+      el('input', {type:'radio', name:'c' + q.id + i, checked:q.correct === k, disabled:locked, 'aria-label':'Đáp án ' + 'ABCD'[k] + ' là đáp án đúng', onchange:() => { q.correct = k; dirty(); }}),
+      el('span', {class:'ltr', text:'ABCD'[k]}),
+      el('input', {type:'text', placeholder:'Đáp án ' + 'ABCD'[k] + (k > 1 ? ' (có thể để trống)' : ''), value:q.options[k], disabled:locked, oninput:e => { q.options[k] = e.target.value; dirty(); }})))),
+    el('label', {class:'timef'}, 'Thời gian trả lời', el('input', {type:'number', min:5, max:120, value:String(q.time), disabled:locked, oninput:e => { q.time = +e.target.value; dirty(); }}), 'giây')));
+  return el('section', {class:'panel', style:'max-width:760px'},
+    el('h3', {text:'Câu hỏi trắc nghiệm'}),
+    el('p', {class:'muted small', text:'Chọn nút tròn cạnh đáp án đúng. Mỗi câu có 2 đến 4 đáp án.'}),
+    lockBanner(),
+    cards.length ? cards : el('p', {class:'empty', text:'Chưa có câu hỏi nào.'}),
+    el('div', {class:'row'},
+      el('button', {class:'btn', type:'button', disabled:locked, text:'+ Thêm câu hỏi', onclick:() => { S.draftQ.push({id:newId('q'), text:'', options:['', '', '', ''], correct:0, time:20}); S.dirtyQ = true; forceRender(); }}),
+      saveBtn));
+}
+async function saveQuestions(){
+  const out = [];
+  for (const [i, q] of S.draftQ.entries()){
+    const text = q.text.trim(), opts = q.options.map(s => s.trim());
+    if (!text) return toast('Câu ' + (i + 1) + ': chưa nhập nội dung.');
+    if (opts.filter(Boolean).length < 2) return toast('Câu ' + (i + 1) + ': cần ít nhất 2 đáp án.');
+    if (!opts[q.correct]) return toast('Câu ' + (i + 1) + ': đáp án đúng đang để trống.');
+    const map = [], options = [];
+    opts.forEach((o, k) => { if (o){ map[k] = options.length; options.push(o); } });
+    out.push({id:q.id || newId('q'), text, options, correct:map[q.correct], time:clamp(Math.round(+q.time || 20), 5, 120)});
+  }
+  try { await saveCfg({questions:out}); S.dirtyQ = false; toast('Đã lưu ' + out.length + ' câu hỏi.'); }
+  catch(e){ toast('Chưa lưu được. Thử lại.'); }
+}
+
+function prizesEditor(){
+  if (!S.draftP) S.draftP = cloneZs();
+  const locked = S.main.status !== 'lobby';
+  const saveBtn = el('button', {class:'btn primary', type:'button', disabled:locked || !S.dirtyP, text:'Lưu phần quà', onclick:savePrizes});
+  const dirty = () => { S.dirtyP = true; saveBtn.disabled = false; saveBtn.textContent = 'Lưu phần quà *'; };
+  const rows = S.draftP.map((z, i) => el('div', {class:'prow'},
+    el('span', {class:'rk', text:String(i + 1)}),
+    el('input', {type:'text', value:z.name, placeholder:'Tên phần quà', disabled:locked, 'aria-label':'Tên phần quà ' + (i + 1), oninput:e => { z.name = e.target.value; dirty(); }}),
+    el('button', {class:'btn sm', type:'button', disabled:locked, text:'Xóa', onclick:() => { S.draftP.splice(i, 1); S.dirtyP = true; forceRender(); }})));
+  return el('section', {class:'panel', style:'max-width:620px'},
+    el('h3', {text:'Phần quà'}),
+    el('p', {class:'muted small', text:'Người xếp hạng cao nhất chọn quà trước, rồi lần lượt xuống. Nên chuẩn bị ít nhất bằng số người chơi.'}),
+    lockBanner(),
+    rows.length ? rows : el('p', {class:'empty', text:'Chưa có phần quà nào.'}),
+    el('div', {class:'row'},
+      el('button', {class:'btn', type:'button', disabled:locked, text:'+ Thêm phần quà', onclick:() => { S.draftP.push({id:newId('z'), name:''}); S.dirtyP = true; forceRender(); }}),
+      saveBtn));
+}
+async function savePrizes(){
+  const out = S.draftP.map(z => ({id:z.id || newId('z'), name:z.name.trim()}));
+  if (out.some(z => !z.name)) return toast('Có phần quà chưa nhập tên.');
+  try { await saveCfg({prizes:out}); S.dirtyP = false; toast('Đã lưu ' + out.length + ' phần quà.'); }
+  catch(e){ toast('Chưa lưu được. Thử lại.'); }
+}
+
+function historyTab(){
+  const list = S.history;
+  return el('section', {class:'panel', style:'max-width:760px'},
+    el('h3', {text:'Lịch sử các lượt chơi'}),
+    list.length ? list.map((h, i) => el('details', {class:'h', open:i === 0},
+      el('summary', {}, el('span', {text:'Lượt ' + h.round + ' · ' + (h.rows || []).length + ' người'}), el('span', {class:'muted small', text:new Date(h.endedAt).toLocaleString('vi-VN')})),
+      el('div', {class:'tscroll', style:'padding-bottom:12px'}, el('table', {class:'lb'},
+        el('thead', {}, el('tr', {}, el('th', {text:'#'}), el('th', {text:'Họ tên'}), el('th', {class:'num', text:'Đúng'}), el('th', {class:'num', text:'Thời gian'}), el('th', {text:'Quà'}))),
+        el('tbody', {}, (h.rows || []).map((r, k) => el('tr', {},
+          el('td', {}, el('span', {class:'rk' + (k < 3 ? ' r' + (k + 1) : ''), text:String(k + 1)})),
+          el('td', {text:r.name}), el('td', {class:'num', text:r.correct + '/' + r.total}), el('td', {class:'num', text:fmt(r.timeMs)}),
+          el('td', {text:r.prize || '—'}))))))))
+      : el('p', {class:'empty', text:'Chưa có lượt nào kết thúc. Bảng xếp hạng được lưu ở đây mỗi khi bạn reset.'}));
+}
+
+/* ---------- render loop ---------- */
+let raf = 0;
+function schedule(){ if (!raf) raf = requestAnimationFrame(() => { raf = 0; render(); }); }
+function render(){
+  renderHeader();
+  const v = computeView();
+  const main = $('#main');
+  const same = v.key === S.lastKey;
+  
+  if (same && v.stat && !(S.force && v.key.indexOf('admin:') === 0)) return;
+  const a = document.activeElement;
+  if (same && !S.force && a && a !== document.body && a.matches && a.matches('input,textarea') && main.contains(a)){ S.pending = true; return; }
+  
+  S.force = false; S.pending = false; S.lastKey = v.key;
+  clearInterval(S.tick);
+
+  // Cập nhật thông minh: Chỉ thay đổi nội dung Bảng xếp hạng nếu đang ở cùng 1 màn hình
+  if (same && !v.stat && main.querySelector('.lb')) {
+      const newDom = v.build();
+      const oldTable = main.querySelector('.lb');
+      const newTable = newDom.querySelector('.lb');
+      if (oldTable && newTable) {
+          oldTable.replaceWith(newTable);
+          // Cập nhật thêm số lượng người đã xong ở header (nếu có)
+          const oldMeta = main.querySelector('.qmeta');
+          const newMeta = newDom.querySelector('.qmeta');
+          if (oldMeta && newMeta) oldMeta.replaceWith(newMeta);
+          return;
       }
-    }
-
-    folder.appendChild(children);
-    list.appendChild(folder);
-  });
-
-  /* Dữ liệu truy cập chỉ Admin */
-  if (isAdmin(currentUser)){
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "rule-link admin-only-rule";
-    btn.title = ACCESS_DATA_SHEET_RULE.url;
-
-    const ic = document.createElement("span");
-    ic.className = "ic";
-    ic.textContent = "📊";
-
-    const text = document.createElement("span");
-    text.textContent = ACCESS_DATA_SHEET_RULE.name;
-
-    const badge = document.createElement("span");
-    badge.className = "admin-badge";
-    badge.textContent = "ADMIN";
-
-    btn.appendChild(ic);
-    btn.appendChild(text);
-    btn.appendChild(badge);
-
-    btn.addEventListener("click", () => {
-      window.open(ACCESS_DATA_SHEET_RULE.url, "_blank", "noopener,noreferrer");
-    });
-
-    list.appendChild(btn);
   }
-}
-function startEditRule(index){
-  const rule = adminRules[index];
-  if (!rule) return;
-  editingRuleIndex = index;
-  document.getElementById("ruleNameInput").value = rule.name;
-  document.getElementById("ruleUrlInput").value = rule.url;
-  document.getElementById("ruleCategoryInput").value = rule.categoryId || "phone";
-  document.getElementById("saveRuleBtn").textContent = "Lưu thay đổi";
-  document.getElementById("ruleNameInput").focus();
-}
 
-function deleteRule(index){
-  const rule = adminRules[index];
-  if (!rule || !confirm('Xoá Rule "' + rule.name + '"?')) return;
-  const deletedRule = adminRules[index];
-  adminRules.splice(index, 1);
-  saveAdminRules();
-  deleteRuleFromServer(deletedRule);
-  renderAdminRules();
-  renderRuleLinks();
+  // Khúc này giữ nguyên như cũ
+  main.replaceChildren(v.build());
+  if (v.after) v.after();
+}
+$('#main').addEventListener('focusout', () => setTimeout(() => { if (S.pending){ S.pending = false; render(); } }, 60));
 
-  const quickInput = document.getElementById("quickSearchInput");
-  if (quickInput){
-    renderQuickSearchResults(quickInput.value);
-    filterSidebarRules(quickInput.value);
+function checkOverflow(){
+  if (!S.loaded.main || !S.loaded.players || !S.uid) return;
+  const mine = S.players.some(p => p.uid === S.uid && p.round === S.main.round);
+  if (mine && !validPlayers().some(p => p.uid === S.uid)){
+    S.full = true;
+    if(S.db && S.uid) S.db.doc('players/' + S.uid).delete().catch(() => {});
   }
 }
 
-function openAdminPanel(){
-  if (!isAdmin(currentUser)) return;
-  document.getElementById("adminPanel").style.display = "block";
-  document.getElementById("adminToggleBtn").style.display = "inline-block";
-  renderAdminRules();
-  syncDeployNotesFromServer();
-  if (isAdmin(currentUser)){
-    syncLocalRulesToServer().then(() => setTimeout(syncRulesFromServer, 1200));
-  }else{
-    syncRulesFromServer();
-  }
-}
+/* ---------- boot ---------- */
+(async function boot(){
+  render();
+  setTimeout(() => { if (!(S.loaded.main && S.loaded.cfg && S.loaded.players)){ S.slow = true; schedule(); } }, 10000);
 
-function closeAdminPanel(){
-  document.getElementById("adminPanel").style.display = "none";
-}
-
-const PARENT_CATEGORIES = [
-  {id:"phone", name:"Điện thoại", icon:"📱"},
-  {id:"tablet", name:"Tablet", icon:"▣"},
-  {id:"ce", name:"CE", icon:"◈"},
-  {id:"other", name:"SP Khác", icon:"📦"},
-  {id:"tips", name:"Mẹo vặt", icon:"💡"},
-  {id:"deploy", name:"Triển khai", icon:"📢"}
-];
-
-let activeCategoryId = PARENT_CATEGORIES[0].id;
-let currentUser = null; /* lưu tạm trong bộ nhớ trang thay vì sessionStorage,
-                            vì một số trình duyệt (mở file trực tiếp qua file://,
-                            hoặc chế độ duyệt web riêng tư) chặn sessionStorage
-                            và làm nút đăng nhập như "không phản ứng". */
-
-function normalize(str){
-  return (str || "").trim().toUpperCase();
-}
-
-function findUser(code){
-  const norm = normalize(code);
-  return ACCESS_CODES.find(u => normalize(u.code) === norm) || null;
-}
-
-function showMain(user){
-  document.getElementById("loginScreen").style.display = "none";
-  document.getElementById("mainScreen").style.display = "block";
-  document.getElementById("whoName").textContent = "Xin chào, " + user.name;
-
-  const adminBtn = document.getElementById("adminToggleBtn");
-  if (isAdmin(user)){
-    adminBtn.style.display = "inline-block";
-  }else{
-    adminBtn.style.display = "none";
-    closeAdminPanel();
-  }
-
-  renderTabs();
-  renderRuleLinks();
-  renderCategory(activeCategoryId);
-  updateDeployAdminPanel();
-  syncDeployNotesFromServer();
-
-  /* Admin đồng bộ Rule đang có trên máy lên server trước.
-     Sau đó tất cả thiết bị tải danh sách Rule chung. */
-  if (isAdmin(user)){
-    syncLocalRulesToServer().then(() => {
-      setTimeout(syncRulesFromServer, 1200);
-    });
-  }else{
-    syncRulesFromServer();
-  }
-}
-
-function showLogin(){
-  document.getElementById("mainScreen").style.display = "none";
-  document.getElementById("loginScreen").style.display = "flex";
-  document.getElementById("codeInput").value = "";
-  document.getElementById("provinceInput").value = "";
-  document.getElementById("passwordInput").value = "";
-  closeAdminPanel();
-  document.getElementById("adminToggleBtn").style.display = "none";
-  const quickInput = document.getElementById("quickSearchInput");
-  if (quickInput) quickInput.value = "";
-  const quickResults = document.getElementById("quickResults");
-  if (quickResults){
-    quickResults.innerHTML = "";
-    quickResults.classList.remove("show");
-  }
-  document.getElementById("codeInput").focus();
-}
-
-/* ---- xử lý đăng nhập ---- */
-document.getElementById("loginForm").addEventListener("submit", function(e){
-  e.preventDefault();
-
-  try{
-    const input = document.getElementById("codeInput");
-    const provinceInput = document.getElementById("provinceInput");
-    const passwordInput = document.getElementById("passwordInput");
-    const errorBox = document.getElementById("loginError");
-
-    const name = input.value.trim();
-    const province = provinceInput.value.trim();
-    const password = passwordInput.value;
-
-    /* Admin vẫn dùng tài khoản + mật khẩu cố định. */
-    if (normalize(name) === normalize(ADMIN_ACCOUNT.username)){
-      if (password === ADMIN_ACCOUNT.password){
-        const adminUser = {
-          code: ADMIN_ACCOUNT.username,
-          name: ADMIN_ACCOUNT.name,
-          province: "Quản trị",
-          role: "admin"
-        };
-
-        errorBox.textContent = "";
-        currentUser = adminUser;
-
-        try{
-          sessionStorage.setItem("lib_access_session", JSON.stringify(adminUser));
-        }catch(storageErr){}
-
-        showMain(adminUser);
-        openAdminPanel();
-        return;
-      }
-
-      errorBox.textContent = "Mật khẩu quản trị viên không đúng.";
-      const card = document.querySelector(".catalog-card");
-      card.classList.remove("shake");
-      void card.offsetWidth;
-      card.classList.add("shake");
-      return;
-    }
-
-    /* User thường: chỉ cần nhập đủ Họ tên + Tỉnh/Thành phố là được vào. */
-    if (name && province){
-      const user = {
-        code: "USER-" + Date.now(),
-        name: name,
-        province: province,
-        role: "user"
-      };
-
-      errorBox.textContent = "";
-      currentUser = user;
-
-      try{
-        sessionStorage.setItem("lib_access_session", JSON.stringify(user));
-      }catch(storageErr){}
-
-      showMain(currentUser);
-      trackAccess("USER_LOGIN", "", "");
-    }else{
-      errorBox.textContent = "Vui lòng nhập đầy đủ họ và tên và tỉnh / thành phố.";
-      const card = document.querySelector(".catalog-card");
-      card.classList.remove("shake");
-      void card.offsetWidth;
-      card.classList.add("shake");
-    }
-  }catch(err){
-    document.getElementById("loginError").textContent = "Có lỗi xảy ra: " + err.message;
-    console.error(err);
-  }
-});
-
-document.getElementById("logoutBtn").addEventListener("click", function(){
-  currentUser = null;
-  try{ sessionStorage.removeItem("lib_access_session"); }catch(e){}
-  showLogin();
-});
-
-
-/* ---- tìm kiếm nhanh Rule ---- */
-document.getElementById("quickSearchInput").addEventListener("input", function(e){
-  const q = e.target.value;
-  renderQuickSearchResults(q);
-  filterSidebarRules(q);
-});
-
-/* ---- chức năng quản trị Rule ---- */
-document.getElementById("adminToggleBtn").addEventListener("click", function(){
-  if (!isAdmin(currentUser)) return;
-  if (document.getElementById("adminPanel").style.display === "block"){
-    closeAdminPanel();
-  }else{
-    openAdminPanel();
-  }
-});
-
-document.getElementById("closeAdminBtn").addEventListener("click", closeAdminPanel);
-
-
-document.getElementById("deployNoteForm").addEventListener("submit", async function(e){
-  e.preventDefault();
-
-  if (!isAdmin(currentUser)) return;
-
-  const input = document.getElementById("deployNoteInput");
-  const content = input.value.trim();
-
-  if (!content) return;
-
-  const editingId = input.dataset.editingId || "";
-  const note = {
-    id: editingId || (
-      "deploy_" + Date.now() + "_" +
-      Math.random().toString(36).slice(2)
-    ),
-    content: content
+  // 1. Khai báo DB thật: Gắn config Firebase của đại ca vào đây
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID"
   };
 
-  /*
-    Hiển thị ngay trong danh sách Admin trước khi chờ server.
-    Sau đó mới đồng bộ lên Google Sheet.
-  */
-  const existingIndex = deployNotes.findIndex(n => n.id === note.id);
-
-  if (existingIndex >= 0){
-    deployNotes[existingIndex] = note;
-  }else{
-    deployNotes.unshift(note);
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
   }
+  S.db = firebase.firestore();
+  S.booted = true;
 
-  saveDeployNotesCache();
-  renderDeployNotesAdmin();
-  renderDeployNotices();
-  renderRuleLinks();
-
-  input.value = "";
-  delete input.dataset.editingId;
-
-  const btn = document.querySelector("#deployNoteForm button[type=submit]");
-  if (btn) btn.textContent = "Thêm thông báo";
-
-  const ok = await apiPostRule({
-    action:"saveDeployNote",
-    id:note.id,
-    content:note.content
-  });
-
-  if (!ok){
-    alert(
-      "Thông báo đã hiện trên Admin nhưng chưa đồng bộ Google Sheet. " +
-      "Hãy Deploy Apps Script bản mới rồi thử lại."
-    );
-    return;
+  // 2. Cấp UID ẩn danh cho người chơi & Phân quyền Admin
+  S.uid = store('quiz_uid');
+  if (!S.uid) {
+    S.uid = 'user_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    store('quiz_uid', S.uid);
   }
-
-  await syncDeployNotesFromServer();
-});
-
-document.getElementById("adminRuleForm").addEventListener("submit", function(e){
-  e.preventDefault();
-  if (!isAdmin(currentUser)) return;
-
-  const nameInput = document.getElementById("ruleNameInput");
-  const urlInput = document.getElementById("ruleUrlInput");
-  const categoryInput = document.getElementById("ruleCategoryInput");
-
-  const name = nameInput.value.trim();
-  let url = urlInput.value.trim();
-  const category = PARENT_CATEGORIES.find(c => c.id === categoryInput.value) || PARENT_CATEGORIES[0];
-
-  if (!name || !url) return;
-
-  if (!/^https?:\/\//i.test(url)){
-    url = "https://" + url;
-  }
-
-  let savedRule;
-
-  if (editingRuleIndex >= 0 && adminRules[editingRuleIndex]){
-    const oldRule = adminRules[editingRuleIndex];
-
-    savedRule = {
-      id: oldRule.id || makeRuleId(oldRule.name, oldRule.url),
-      name,
-      url,
-      categoryId: category.id,
-      categoryName: category.name
-    };
-
-    adminRules[editingRuleIndex] = savedRule;
-    editingRuleIndex = -1;
-    document.getElementById("saveRuleBtn").textContent = "Thêm Rule";
-  }else{
-    savedRule = {
-      id: makeRuleId(name, url),
-      name,
-      url,
-      categoryId: category.id,
-      categoryName: category.name
-    };
-
-    adminRules.push(savedRule);
-  }
-
-  saveAdminRules();
-  saveRuleToServer(savedRule);
-
-  renderAdminRules();
-  renderRuleLinks();
-
-  nameInput.value = "";
-  urlInput.value = "";
-  categoryInput.value = "phone";
-
-  const quickInput = document.getElementById("quickSearchInput");
-  if (quickInput){
-    renderQuickSearchResults(quickInput.value);
-    filterSidebarRules(quickInput.value);
-  }
-
-  nameInput.focus();
-});
-
-/* ---- render cột danh mục cha + Rule con ---- */
-function renderTabs(){
-  renderRuleLinks();
-}
-
-function renderCategory(catId){
-  activeCategoryId = catId || activeCategoryId || PARENT_CATEGORIES[0].id;
-  renderRuleLinks();
-  updateDeployAdminPanel();
-  renderDeployNotices();
-}
-
-function renderItems(items){
-  /* Tương thích với giao diện cũ; Rule hiện được mở trực tiếp từ danh mục cha. */
-  const grid = document.getElementById("itemGrid");
-  if (grid) grid.innerHTML = "";
-}
-
-function escapeHtml(str){
-  const d = document.createElement("div");
-  d.textContent = str;
-  return d.innerHTML;
-}
-
-/* ---- khôi phục phiên đăng nhập nếu còn hiệu lực (trong cùng tab) ---- */
-(function init(){
-  try{
-    const raw = sessionStorage.getItem("lib_access_session");
-    if (raw){
-      const user = JSON.parse(raw);
-      if (user && user.role === "admin" && user.code === ADMIN_ACCOUNT.username){
-        currentUser = user;
-        showMain(user);
-        openAdminPanel();
-        return;
-      }
-
-      if (user && user.role === "user" && user.name && user.province){
-        currentUser = user;
-        showMain(user);
-        return;
-      }
+  
+  // BẢO MẬT TRANG ADMIN
+  if (location.hash === '#admin') {
+    if (sessionStorage.getItem('admin_auth') === '1') {
+      S.isAdmin = true;
+      S.mode = 'admin';
+    } else {
+      location.hash = ''; // Xóa hash nếu chưa đăng nhập, để tránh lộ màn hình
     }
-  }catch(e){
-    /* sessionStorage bị chặn (file:// hoặc chế độ riêng tư) — không sao,
-       chỉ đơn giản là không tự đăng nhập lại, người dùng nhập mã như bình thường */
   }
-  showLogin();
+
+  const onErr = e => { S.err = e && e.code; toast('Mất kết nối dữ liệu. Nhớ mở Rule Firebase nhé đại ca.'); };
+
+  // 3. Khởi chạy luồng dữ liệu (Đã áp dụng tối ưu query Read Firebase)
+  S.db.doc('state/main').onSnapshot(s => {
+    const prev = S.main.round;
+    S.main = Object.assign({round:1, status:'lobby'}, s.exists ? s.data() : {});
+    if (prev !== S.main.round){ S.full = false; S.resetArmed = false; }
+    S.loaded.main = true; checkOverflow();
+    if (S.lastKey && S.lastKey.indexOf('admin:') === 0) S.force = true;
+    schedule();
+  }, onErr);
+
+  S.db.doc('config/main').onSnapshot(s => {
+    S.cfg = Object.assign({questions:[], prizes:[]}, s.exists ? s.data() : {});
+    if (!S.dirtyQ) S.draftQ = cloneQs();
+    if (!S.dirtyP) S.draftP = cloneZs();
+    S.loaded.cfg = true;
+    if (S.lastKey && S.lastKey.indexOf('admin:') === 0 && !S.dirtyQ && !S.dirtyP) S.force = true;
+    schedule();
+  }, onErr);
+
+  // Lọc trực tiếp vòng hiện tại để không kéo thừa data lịch sử
+  S.db.collection('players').where('round', '==', S.main.round).onSnapshot(snap => {
+    S.players = snap.docs.map(d => { const x = d.data(); return Object.assign({round:0, name:'', joinedAt:0, answers:[], correct:0, timeMs:0, finished:false, prizeId:'', skipped:false}, x, {uid:d.id}); });
+    S.loaded.players = true; checkOverflow(); schedule();
+  }, onErr);
+
+  if (S.isAdmin){
+    S.db.collection('history').orderBy('round', 'desc').limit(50).onSnapshot(snap => {
+      S.history = snap.docs.map(d => d.data()); schedule();
+    }, onErr);
+  }
+  render();
+})();
 })();
 </script>
 
-</body>
-</html>
+</body></html>
