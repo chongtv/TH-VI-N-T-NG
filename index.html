@@ -356,16 +356,13 @@ function startTimer(){
   const duration = q.time * 1000;
   const fill = $('#tfill');
 
-  // 1. Giao việc thu ngắn thanh Progress Bar cho CSS Transition xử lý
   if (fill) {
     fill.style.transition = `transform ${q.time}s linear, background-color 0.3s`;
-    // Ép trình duyệt nhận diện trạng thái đầy trước khi chạy animation lùi về 0
     requestAnimationFrame(() => {
       fill.style.transform = 'scaleX(0)';
     });
   }
 
-  // 2. JS chỉ thong thả đếm lùi số mỗi 1 giây (1000ms) thay vì 100ms
   S.tick = setInterval(() => {
     const left = duration - (Date.now() - S.qStart);
     const sec = $('#tsec');
@@ -373,7 +370,6 @@ function startTimer(){
     if (sec) sec.textContent = Math.max(0, Math.ceil(left / 1000)) + 's';
     if (fill && left <= 5000) fill.classList.add('low');
 
-    // Khóa đáp án khi hết giờ
     if (left <= 0 && !S.qLocked){
       S.qLocked = true; 
       clearInterval(S.tick);
@@ -511,9 +507,11 @@ function controlTab(){
           el('button', {class:'btn', type:'button', text:'Hủy', onclick:() => { S.resetArmed = false; render(); }}))));
     } else actions.push(el('button', {class:'btn block', type:'button', text:'Reset và mở lượt mới', onclick:() => { S.resetArmed = true; render(); }}));
   }
-  const hint = st === 'lobby'
-    ? (!totalQ() ? 'Chưa có câu hỏi: thêm ở tab Câu hỏi.' : !vp.length ? 'Chờ người chơi quét mã QR và nhập tên.' : 'Sẵn sàng. Bấm bắt đầu khi mọi người đã vào.')
-    : pick ? 'Mọi người đã xong. Người chơi đang chọn quà theo thứ hạng.' : vp.filter(isDone).length + '/' + vp.length + ' người đã nộp bài.';
+
+  // CẢNH BÁO NẾU CHƯA CÓ CÂU HỎI
+  const hintNode = st === 'lobby'
+    ? (!totalQ() ? el('span', {style:'color:var(--bad); font-weight:600'}, '⚠️ CHƯA CÓ CÂU HỎI: Đại ca phải sang tab "Câu hỏi" để soạn và bấm LƯU LẠI trước khi bắt đầu!') : !vp.length ? 'Chờ người chơi quét mã QR và nhập tên.' : 'Sẵn sàng. Bấm bắt đầu khi mọi người đã vào.')
+    : (pick ? 'Mọi người đã xong. Người chơi đang chọn quà theo thứ hạng.' : vp.filter(isDone).length + '/' + vp.length + ' người đã nộp bài.');
 
   const urlInput = el('input', {type:'text', id:'shareurl', value:S.urlDraft != null ? S.urlDraft : url, 'aria-label':'Đường link app', oninput:e => { S.urlDraft = e.target.value; }});
   const left = el('div', {class:'wrap', style:'gap:16px'},
@@ -529,7 +527,7 @@ function controlTab(){
       el('p', {class:'small muted', text:'Chia sẻ app ở quyền Người đóng góp để người chơi ghi được điểm.'})),
     el('section', {class:'panel'},
       el('div', {class:'qmeta'}, el('span', {text:'Lượt ' + S.main.round}), el('span', {text:vp.length + '/' + MAX + ' người'})),
-      el('p', {class:'muted', text:hint}), actions));
+      el('p', {class:'muted'}, hintNode), actions)); // SỬ DỤNG HINT NODE Ở ĐÂY
   const right = el('section', {class:'panel'},
     el('h3', {text:'Bảng xếp hạng lượt ' + S.main.round}),
     pick && turnInfo().turn ? el('div', {class:'note', text:'Đang chờ ' + turnInfo().turn.name + ' chọn quà. Nếu bạn ấy vắng mặt, bấm Bỏ qua.'}) : null,
@@ -565,8 +563,10 @@ async function resetRound(){
   } catch(e){ toast('Reset chưa xong, kiểm tra kết nối rồi thử lại.'); }
   finally { S.busy = false; render(); }
 }
+
+// BẢO ĐẢM KHÔNG BỊ XÓA DỮ LIỆU CŨ KHI LƯU
 async function saveCfg(partial){
-  await S.db.doc('config/main').set({...S.cfg, ...partial});
+  await S.db.doc('config/main').set({...S.cfg, ...partial}, {merge: true});
 }
 
 /* ---- editors ---- */
@@ -740,11 +740,25 @@ function checkOverflow(){
 
   const onErr = e => { S.err = e && e.code; toast('Mất kết nối dữ liệu. Nhớ mở Rule Firebase nhé đại ca.'); };
 
+  // XỬ LÝ LỖI KHÔNG THẤY NGƯỜI CHƠI KHI QUA LƯỢT MỚI
+  let playerUnsub = null;
+  function listenPlayers() {
+    if (playerUnsub) playerUnsub();
+    playerUnsub = S.db.collection('players').where('round', '==', S.main.round).onSnapshot(snap => {
+      S.players = snap.docs.map(d => { const x = d.data(); return Object.assign({round:0, name:'', joinedAt:0, answers:[], correct:0, timeMs:0, finished:false, prizeId:'', skipped:false}, x, {uid:d.id}); });
+      S.loaded.players = true; checkOverflow(); schedule();
+    }, onErr);
+  }
+
   // 3. Khởi chạy luồng dữ liệu (Đã áp dụng tối ưu query Read Firebase)
   S.db.doc('state/main').onSnapshot(s => {
-    const prev = S.main.round;
+    const prev = S.main ? S.main.round : null;
     S.main = Object.assign({round:1, status:'lobby'}, s.exists ? s.data() : {});
-    if (prev !== S.main.round){ S.full = false; S.resetArmed = false; }
+    if (prev !== S.main.round){ 
+      S.full = false; 
+      S.resetArmed = false; 
+      listenPlayers(); // Đăng ký lại Listener khi qua vòng mới
+    }
     S.loaded.main = true; checkOverflow();
     if (S.lastKey && S.lastKey.indexOf('admin:') === 0) S.force = true;
     schedule();
@@ -757,12 +771,6 @@ function checkOverflow(){
     S.loaded.cfg = true;
     if (S.lastKey && S.lastKey.indexOf('admin:') === 0 && !S.dirtyQ && !S.dirtyP) S.force = true;
     schedule();
-  }, onErr);
-
-  // Lọc trực tiếp vòng hiện tại để không kéo thừa data lịch sử
-  S.db.collection('players').where('round', '==', S.main.round).onSnapshot(snap => {
-    S.players = snap.docs.map(d => { const x = d.data(); return Object.assign({round:0, name:'', joinedAt:0, answers:[], correct:0, timeMs:0, finished:false, prizeId:'', skipped:false}, x, {uid:d.id}); });
-    S.loaded.players = true; checkOverflow(); schedule();
   }, onErr);
 
   if (S.isAdmin){
